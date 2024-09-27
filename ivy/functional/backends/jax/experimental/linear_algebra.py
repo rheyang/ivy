@@ -1,11 +1,13 @@
 import math
 from typing import Optional, Tuple, Sequence, Union
 import jax.numpy as jnp
+import jax.scipy.linalg as jla
 from ivy.functional.backends.jax import JaxArray
 
 import ivy
 
 from ivy.functional.ivy.experimental.linear_algebra import _check_valid_dimension_size
+from ivy.utils.exceptions import IvyNotImplementedException
 
 
 def diagflat(
@@ -100,7 +102,7 @@ def matrix_exp(
     *,
     out: Optional[JaxArray] = None,
 ) -> JaxArray:
-    return jnp.exp(x)
+    return jla.expm(x)
 
 
 def eig(
@@ -147,3 +149,26 @@ def cond(
     out: Optional[JaxArray] = None,
 ) -> JaxArray:
     return jnp.linalg.cond(x, p=p)
+
+
+def lu_factor(
+    x: JaxArray,
+    /,
+    *,
+    pivot: Optional[bool] = True,
+    out: Optional[JaxArray] = None,
+) -> Tuple[JaxArray]:
+    raise IvyNotImplementedException()
+
+
+def dot(
+    a: JaxArray,
+    b: JaxArray,
+    /,
+    *,
+    out: Optional[JaxArray] = None,
+) -> JaxArray:
+    return jnp.dot(a, b, out=out)
+
+
+dot.support_native_out = True

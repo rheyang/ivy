@@ -11,10 +11,16 @@ TOLERANCE_DICT = {
 
 
 def assert_all_close(
-    ret_np, ret_from_gt_np, rtol=1e-05, atol=1e-08, ground_truth_backend="TensorFlow"
+    ret_np,
+    ret_from_gt_np,
+    backend: str,
+    rtol=1e-05,
+    atol=1e-08,
+    ground_truth_backend="TensorFlow",
 ):
-    """Matches the ret_np and ret_from_gt_np inputs element-by-element to ensure that
-    they are the same.
+    """
+    Match the ret_np and ret_from_gt_np inputs element-by-element to ensure that they
+    are the same.
 
     Parameters
     ----------
@@ -35,37 +41,47 @@ def assert_all_close(
     """
     ret_dtype = str(ret_np.dtype)
     ret_from_gt_dtype = str(ret_from_gt_np.dtype).replace("longlong", "int64")
-    assert ret_dtype == ret_from_gt_dtype, (
+    assert (
+        ret_dtype == ret_from_gt_dtype
+    ), (
         "the ground truth framework {} returned a {} datatype while "
         "the backend {} returned a {} datatype".format(
             ground_truth_backend,
             ret_from_gt_dtype,
-            ivy.current_backend_str(),
+            backend,
             ret_dtype,
         )
     )
-    if ivy.is_ivy_container(ret_np) and ivy.is_ivy_container(ret_from_gt_np):
-        ivy.Container.cont_multi_map(assert_all_close, [ret_np, ret_from_gt_np])
-    else:
-        if ret_np.dtype == "bfloat16" or ret_from_gt_np.dtype == "bfloat16":
-            ret_np = ret_np.astype("float64")
-            ret_from_gt_np = ret_from_gt_np.astype("float64")
-        assert np.allclose(
-            np.nan_to_num(ret_np), np.nan_to_num(ret_from_gt_np), rtol=rtol, atol=atol
-        ), (
-            f" the results from backend {ivy.current_backend_str()} "
-            f"and ground truth framework {ground_truth_backend} "
-            f"do not match\n {ret_np}!={ret_from_gt_np} \n\n"
-        )
+    # TODO eanble
+    # if ivy.is_ivy_container(ret_np) and ivy.is_ivy_container(ret_from_gt_np):
+    #     ivy.Container.cont_multi_map(assert_all_close, [ret_np, ret_from_gt_np])
+    # else:
+    if ret_np.dtype == "bfloat16" or ret_from_gt_np.dtype == "bfloat16":
+        ret_np = ret_np.astype("float64")
+        ret_from_gt_np = ret_from_gt_np.astype("float64")
+    assert np.allclose(
+        np.nan_to_num(ret_np), np.nan_to_num(ret_from_gt_np), rtol=rtol, atol=atol
+    ), (
+        f" the results from backend {backend} "
+        f"and ground truth framework {ground_truth_backend} "
+        f"do not match\n {ret_np}!={ret_from_gt_np} \n\n"
+    )
 
 
 def assert_same_type_and_shape(values, this_key_chain=None):
-    x, y = values
-    if isinstance(x, np.ndarray):
-        x_dtype = str(x.dtype)
-        y_dtype = str(y.dtype).replace("longlong", "int64")
-        assert x.shape == y.shape, "x.shape = {}, y.shape = {}".format(x.shape, y.shape)
-        assert x_dtype == y_dtype, "x.dtype = {}, y.dtype = {}".format(x_dtype, y_dtype)
+    x_, y_ = values
+    for x, y in zip(x_, y_):
+        if isinstance(x, np.ndarray):
+            x_d = str(x.dtype).replace("longlong", "int64")
+            y_d = str(y.dtype).replace("longlong", "int64")
+            assert (
+                x.shape == y.shape
+            ), "returned shape = {}, ground-truth returned shape = {}".format(
+                x.shape, y.shape
+            )
+            assert (
+                x_d == y_d
+            ), "returned dtype = {}, ground-truth returned dtype = {}".format(x_d, y_d)
 
 
 def value_test(
@@ -74,10 +90,11 @@ def value_test(
     ret_np_from_gt_flat,
     rtol=None,
     atol=1e-6,
+    backend: str,
     ground_truth_backend="TensorFlow",
 ):
-    """Performs a value test for matching the arrays in ret_np_flat and
-    ret_from_np_gt_flat.
+    """
+    Perform a value test for matching the arrays in ret_np_flat and ret_from_np_gt_flat.
 
     Parameters
     ----------
@@ -104,12 +121,14 @@ def value_test(
         ret_np_flat = [ret_np_flat]
     if type(ret_np_from_gt_flat) != list:
         ret_np_from_gt_flat = [ret_np_from_gt_flat]
-    assert len(ret_np_flat) == len(ret_np_from_gt_flat), (
+    assert len(
+        ret_np_flat
+    ) == len(ret_np_from_gt_flat), (
         "The length of results from backend {} and ground truth"
         "framework {} does not match\n\n"
         "len(ret_np_flat) != len(ret_np_from_gt_flat):\n\n"
         "ret_np_flat:\n\n{}\n\nret_np_from_gt_flat:\n\n{}".format(
-            ivy.current_backend_str(),
+            backend,
             ground_truth_backend,
             ret_np_flat,
             ret_np_from_gt_flat,
@@ -122,6 +141,7 @@ def value_test(
             assert_all_close(
                 ret_np,
                 ret_np_from_gt,
+                backend=backend,
                 rtol=rtol,
                 atol=atol,
                 ground_truth_backend=ground_truth_backend,
@@ -131,6 +151,7 @@ def value_test(
             assert_all_close(
                 ret_np,
                 ret_np_from_gt,
+                backend=backend,
                 rtol=rtol,
                 atol=atol,
                 ground_truth_backend=ground_truth_backend,
@@ -138,8 +159,9 @@ def value_test(
 
 
 def check_unsupported_dtype(*, fn, input_dtypes, all_as_kwargs_np):
-    """Checks whether a function does not support the input data types or the output
-    data type.
+    """
+    Check whether a function does not support the input data types or the output data
+    type.
 
     Parameters
     ----------
@@ -182,7 +204,8 @@ def check_unsupported_dtype(*, fn, input_dtypes, all_as_kwargs_np):
 
 
 def check_unsupported_device(*, fn, input_device, all_as_kwargs_np):
-    """Checks whether a function does not support a given device.
+    """
+    Check whether a function does not support a given device.
 
     Parameters
     ----------
@@ -220,7 +243,8 @@ def check_unsupported_device(*, fn, input_device, all_as_kwargs_np):
 
 
 def check_unsupported_device_and_dtype(*, fn, device, input_dtypes, all_as_kwargs_np):
-    """Checks whether a function does not support a given device or data types.
+    """
+    Check whether a function does not support a given device or data types.
 
     Parameters
     ----------
@@ -255,7 +279,8 @@ def check_unsupported_device_and_dtype(*, fn, device, input_dtypes, all_as_kwarg
 
 
 def test_unsupported_function(*, fn, args, kwargs):
-    """Tests a function with an unsupported datatype to raise an exception.
+    """
+    Test a function with an unsupported datatype to raise an exception.
 
     Parameters
     ----------

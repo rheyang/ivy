@@ -1,6 +1,6 @@
 # global
 import abc
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 # local
 import ivy
@@ -10,11 +10,17 @@ import ivy
 
 
 class _ArrayWithActivations(abc.ABC):
-    def relu(self: ivy.Array, /, *, out: Optional[ivy.Array] = None) -> ivy.Array:
+    def relu(
+        self: ivy.Array,
+        /,
+        *,
+        out: Optional[ivy.Array] = None,
+        complex_mode: Literal["split", "magnitude", "jax"] = "jax",
+    ) -> ivy.Array:
         """
         ivy.Array instance method variant of ivy.relu. This method simply wraps the
-        function, and so the docstring for ivy.relu also applies to this method
-        with minimal changes.
+        function, and so the docstring for ivy.relu also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -23,6 +29,8 @@ class _ArrayWithActivations(abc.ABC):
         out
             optional output array, for writing the result to. It must have a shape
             that the inputs broadcast to.
+        complex_mode
+            optional specifier for how to handle complex data types.
 
         Returns
         -------
@@ -36,7 +44,7 @@ class _ArrayWithActivations(abc.ABC):
         >>> print(y)
         ivy.array([0., 0., 1.])
         """
-        return ivy.relu(self._data, out=out)
+        return ivy.relu(self._data, out=out, complex_mode=complex_mode)
 
     def leaky_relu(
         self: ivy.Array,
@@ -44,6 +52,7 @@ class _ArrayWithActivations(abc.ABC):
         *,
         alpha: float = 0.2,
         out: Optional[ivy.Array] = None,
+        complex_mode: Literal["split", "magnitude", "jax"] = "jax",
     ) -> ivy.Array:
         """
         ivy.Array instance method variant of ivy.leaky_relu. This method simply wraps
@@ -59,6 +68,8 @@ class _ArrayWithActivations(abc.ABC):
         out
             optional output array, for writing the result to. It must have a shape
             that the inputs broadcast to.
+        complex_mode
+            optional specifier for how to handle complex data types.
 
         Returns
         -------
@@ -72,7 +83,9 @@ class _ArrayWithActivations(abc.ABC):
         >>> print(y)
         ivy.array([ 0.39, -0.17])
         """
-        return ivy.leaky_relu(self._data, alpha=alpha, out=out)
+        return ivy.leaky_relu(
+            self._data, alpha=alpha, out=out, complex_mode=complex_mode
+        )
 
     def gelu(
         self: ivy.Array,
@@ -83,8 +96,8 @@ class _ArrayWithActivations(abc.ABC):
     ) -> ivy.Array:
         """
         ivy.Array instance method variant of ivy.gelu. This method simply wraps the
-        function, and so the docstring for ivy.gelu also applies to this method
-        with minimal changes.
+        function, and so the docstring for ivy.gelu also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -149,8 +162,8 @@ class _ArrayWithActivations(abc.ABC):
     ) -> ivy.Array:
         """
         ivy.Array instance method variant of ivy.softmax. This method simply wraps the
-        function, and so the docstring for ivy.softmax also applies to this method
-        with minimal changes.
+        function, and so the docstring for ivy.softmax also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -186,8 +199,8 @@ class _ArrayWithActivations(abc.ABC):
     ) -> ivy.Array:
         """
         ivy.Array instance method variant of ivy.softplus. This method simply wraps the
-        function, and so the docstring for ivy.softplus also applies to this method
-        with minimal changes.
+        function, and so the docstring for ivy.softplus also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -232,10 +245,9 @@ class _ArrayWithActivations(abc.ABC):
         out: Optional[ivy.Array] = None,
     ) -> ivy.Array:
         """
-        ivy.Array instance method variant of ivy.log_softmax.
-        This method simply wraps the function,
-        and so the docstring for ivy.log_softmax also applies to this method
-        with minimal changes.
+        ivy.Array instance method variant of ivy.log_softmax. This method simply wraps
+        the function, and so the docstring for ivy.log_softmax also applies to this
+        method with minimal changes.
 
         Parameters
         ----------
@@ -268,8 +280,8 @@ class _ArrayWithActivations(abc.ABC):
     def mish(self: ivy.Array, /, *, out: Optional[ivy.Array] = None) -> ivy.Array:
         """
         ivy.Array instance method variant of ivy.mish. This method simply wraps the
-        function, and so the docstring for ivy.mish also applies to this method
-        with minimal changes.
+        function, and so the docstring for ivy.mish also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -287,3 +299,41 @@ class _ArrayWithActivations(abc.ABC):
         ivy.array([-0.30340147,  0.        ,  0.86509842])
         """
         return ivy.mish(self._data, out=out)
+
+    def hardswish(self: ivy.Array, /, *, out: Optional[ivy.Array] = None) -> ivy.Array:
+        """
+        Apply the hardswish activation function element-wise.
+
+        Parameters
+        ----------
+        x
+            input array
+        out
+            optional output array, for writing the result to. It must have
+            a shape that the inputs broadcast to.
+
+        Returns
+        -------
+        ret
+            an array containing the hardswish activation of each element in ``x``.
+
+        Examples
+        --------
+        With :class:`ivy.Array` input:
+
+        >>> x = ivy.array([0., 0., 4.])
+        >>> y = ivy.hardswish(x)
+        >>> y
+        ivy.array([0., 0., 4.])
+
+        With :class:`ivy.Container` input:
+
+        >>> x = ivy.Container(a=ivy.array([-3., 4., 5.]), b=ivy.array([0., 5.]))
+        >>> x = ivy.hardswish(x, out=x)
+        >>> x
+        {
+            a: ivy.array([-0.,  4.,  5.]),
+            b: ivy.array([0., 5.])
+        }
+        """
+        return ivy.hardswish(self._data, out=out)

@@ -51,12 +51,14 @@ def test_tensorflow_fused_batch_norm(
     dtypes_args,
     test_flags,
     frontend,
+    backend_fw,
     fn_tree,
     on_device,
 ):
     dtypes, x, epsilon, factor, training, data_format, vectors = dtypes_args
     helpers.test_frontend_function(
         input_dtypes=dtypes,
+        backend_to_test=backend_fw,
         test_flags=test_flags,
         frontend=frontend,
         fn_tree=fn_tree,
@@ -90,11 +92,13 @@ def test_tensorflow_depthwise_conv2d(
     frontend,
     test_flags,
     fn_tree,
+    backend_fw,
     on_device,
 ):
     input_dtype, x, filters, dilation, data_format, stride, padding = x_f_d_df
     helpers.test_frontend_function(
         input_dtypes=input_dtype,
+        backend_to_test=backend_fw,
         frontend=frontend,
         test_flags=test_flags,
         fn_tree=fn_tree,
@@ -125,11 +129,13 @@ def test_tensorflow_separable_conv2d(
     frontend,
     test_flags,
     fn_tree,
+    backend_fw,
     on_device,
 ):
     input_dtype, x, filters, dilation, data_format, stride, padding = x_f_d_df
     helpers.test_frontend_function(
         input_dtypes=input_dtype,
+        backend_to_test=backend_fw,
         frontend=frontend,
         test_flags=test_flags,
         fn_tree=fn_tree,
@@ -141,5 +147,39 @@ def test_tensorflow_separable_conv2d(
         padding=padding,
         rate=dilation,
         name=None,
+        data_format=data_format,
+    )
+
+
+# max_pool
+@handle_frontend_test(
+    fn_tree="tensorflow.compat.v1.nn.max_pool",
+    data_format=st.just("NHWC"),
+    x_k_s_p=helpers.arrays_for_pooling(min_dims=4, max_dims=4, min_side=1, max_side=4),
+    test_with_out=st.just(False),
+)
+def test_tensorflow_max_pool(
+    *,
+    x_k_s_p,
+    data_format,
+    frontend,
+    test_flags,
+    fn_tree,
+    backend_fw,
+    on_device,
+):
+    input_dtype, x, ksize, strides, padding = x_k_s_p
+    data_format = data_format
+    helpers.test_frontend_function(
+        input_dtypes=input_dtype,
+        backend_to_test=backend_fw,
+        frontend=frontend,
+        test_flags=test_flags,
+        fn_tree=fn_tree,
+        on_device=on_device,
+        value=x[0],
+        ksize=ksize,
+        strides=strides,
+        padding=padding,
         data_format=data_format,
     )

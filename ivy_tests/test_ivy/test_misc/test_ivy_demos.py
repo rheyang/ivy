@@ -11,12 +11,14 @@ import ivy.functional.backends.numpy
 # Tests #
 # ------#
 
-# training
-def test_training_demo(on_device):
 
-    if ivy.current_backend_str() == "numpy":
+# training
+def test_training_demo(on_device, backend_fw):
+    if backend_fw == "numpy":
         # numpy does not support gradients
         pytest.skip()
+
+    ivy.set_backend(backend_fw)
 
     class MyModel(ivy.Module):
         def __init__(self):
@@ -41,10 +43,11 @@ def test_training_demo(on_device):
         loss, grads = ivy.execute_with_gradients(loss_fn, model.v)
         model.v = optimizer.step(model.v, grads)
 
+    ivy.previous_backend()
+
 
 # functional api
 def test_array(on_device):
-    ivy.previous_backend()
     import jax.numpy as jnp
 
     assert ivy.concat((jnp.ones((1,)), jnp.ones((1,))), axis=-1).shape == (2,)
@@ -57,3 +60,6 @@ def test_array(on_device):
     import torch
 
     assert ivy.concat((torch.ones((1,)), torch.ones((1,))), axis=-1).shape == (2,)
+    import paddle
+
+    assert ivy.concat((paddle.ones((1,)), paddle.ones((1,))), axis=-1).shape == (2,)

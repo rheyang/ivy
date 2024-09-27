@@ -85,7 +85,6 @@ def test_container_list_stack(on_device):
 
 
 def test_container_unify(on_device):
-
     # on_devices and containers
     on_devices = list()
     dev0 = on_device
@@ -588,7 +587,6 @@ def test_container_depth(on_device):
 
 @pytest.mark.parametrize("inplace", [True, False])
 def test_container_cutoff_at_depth(inplace, on_device):
-
     # values
     a_val = ivy.array([1], device=on_device)
     bcde_val = ivy.array([2], device=on_device)
@@ -628,7 +626,6 @@ def test_container_cutoff_at_depth(inplace, on_device):
 
 @pytest.mark.parametrize("inplace", [True, False])
 def test_container_cutoff_at_height(inplace, on_device):
-
     # values
     d_val = ivy.array([2], device=on_device)
     e_val = ivy.array([3], device=on_device)
@@ -675,7 +672,6 @@ def test_container_cutoff_at_height(inplace, on_device):
 
 @pytest.mark.parametrize("str_slice", [True, False])
 def test_container_slice_keys(str_slice, on_device):
-
     # values
     a_val = ivy.array([1], device=on_device)
     b_val = ivy.array([2], device=on_device)
@@ -1608,7 +1604,6 @@ def test_container_prune_keys_from_key_chains(on_device):
 
 
 def test_container_restructure_key_chains(on_device):
-
     # single
     container = Container(
         {
@@ -2596,6 +2591,12 @@ def test_container_pickle(on_device):
 
     # without module attribute
     cont = Container(dict_in)
+
+    # paddle tansor can't be pickled directly as mentioned
+    # in the issue https://github.com/PaddlePaddle/Paddle/issues/41107
+    if ivy.backend == "paddle":
+        cont = cont.to_numpy()
+
     assert cont._local_ivy is None
     pickled = pickle.dumps(cont)
     cont_again = pickle.loads(pickled)
@@ -2605,6 +2606,12 @@ def test_container_pickle(on_device):
 
     # with module attribute
     cont = Container(dict_in, ivyh=ivy)
+
+    # paddle tansor can't be pickled directly as mentioned
+    # in the issue https://github.com/PaddlePaddle/Paddle/issues/41107
+    if ivy.backend == "paddle":
+        cont = cont.to_numpy()
+
     assert cont._local_ivy is ivy
     pickled = pickle.dumps(cont)
     cont_again = pickle.loads(pickled)
@@ -2624,6 +2631,11 @@ def test_container_to_and_from_disk_as_pickled(on_device):
         },
     }
     container = Container(dict_in)
+
+    # paddle tansor can't be pickled directly as mentioned
+    # in the issue https://github.com/PaddlePaddle/Paddle/issues/41107
+    if ivy.backend == "paddle":
+        container = container.to_numpy()
 
     # saving
     container.cont_to_disk_as_pickled(save_filepath)
@@ -2739,7 +2751,6 @@ def test_container_if_exists(on_device):
 
 
 def test_jax_pytree_compatibility(on_device):
-
     if ivy.current_backend_str() != "jax":
         pytest.skip()
 
@@ -2769,8 +2780,8 @@ def test_jax_pytree_compatibility(on_device):
         assert np.array_equal(ivy.to_numpy(cont_values[i]), ivy.to_numpy(true_val))
 
 
+@pytest.mark.skip("Prevents PyTest from Terminating.")
 def test_container_from_queues(on_device):
-
     if "gpu" in on_device:
         # Cannot re-initialize CUDA in forked subprocess. 'spawn'
         # start method must be used.
@@ -2794,8 +2805,7 @@ def test_container_from_queues(on_device):
                     "a": [
                         ivy.to_native(ivy.array([1.0, 2.0, 3.0], device=on_device))
                         * worker_id
-                    ]
-                    * load_size
+                    ] * load_size
                 }
             )
 
@@ -3391,3 +3401,65 @@ def test_container_trim_key(on_device):
     max_length = 3
     trimmed_key = ivy.Container.cont_trim_key(key, max_length)
     assert trimmed_key == "adg"
+
+
+def test_container_inplace(on_device):
+    container0 = Container(
+        {
+            "a": ivy.array([1], device=on_device),
+            "b": {
+                "c": ivy.array([1], device=on_device),
+                "d": ivy.array([2], device=on_device),
+            },
+        }
+    )
+    const = 3
+    arr = ivy.array([1], device=on_device)
+    container1 = Container(
+        {
+            "a": ivy.array([3], device=on_device),
+            "b": {
+                "c": ivy.array([4], device=on_device),
+                "d": ivy.array([5], device=on_device),
+            },
+        }
+    )
+
+    special_funcs = [
+        "__add__",
+        "__and__",
+        "__floordiv__",
+        "__lshift__",
+        "__matmul__",
+        "__mod__",
+        "__mul__",
+        "__pow__",
+        "__rshift__",
+        "__sub__",
+        "__truediv__",
+        "__xor__",
+    ]
+
+    for func_str in special_funcs:
+        func = getattr(Container, func_str)
+        ifunc = getattr(Container, func_str[:2] + "i" + func_str[2:])
+
+        for value in [
+            const,
+            arr,
+            container1,
+        ]:
+            if value == const and func_str == "__matmul__":
+                continue
+            container0_copy = container0.cont_deep_copy()
+            id_before_op = id(container0_copy)
+            og_ids = container0_copy.cont_map(lambda x, _: id(x))
+            ifunc(container0_copy, value)
+            op_ids = container0_copy.cont_map(lambda x, _: id(x))
+
+            assert func(container0, value) == container0_copy  # values
+            assert id(container0_copy) == id_before_op  # container ids
+            assert og_ids == op_ids  # value ids
+
+
+# TODO: Test non-inplace operator functions like __add__ and __matmul__

@@ -10,6 +10,8 @@ from ivy.func_wrapper import (
     handle_nestable,
     handle_array_like_without_promotion,
     handle_array_function,
+    handle_device_shifting,
+    handle_backend_invalid,
 )
 from ivy.utils.exceptions import handle_exceptions
 
@@ -21,9 +23,8 @@ def _check_valid_dimension_size(std):
     ivy.utils.assertions.check_dimensions(std)
 
 
-@to_native_arrays_and_back
-@handle_nestable
 @handle_exceptions
+@handle_nestable
 @handle_array_like_without_promotion
 @handle_array_function
 def eigh_tridiagonal(
@@ -39,8 +40,7 @@ def eigh_tridiagonal(
     tol: Optional[float] = None,
 ) -> Union[ivy.Array, Tuple[ivy.Array, ivy.Array]]:
     """
-    Computes the eigenvalues and eigenvectors of a Hermitian
-    tridiagonal matrix.
+    Compute the eigenvalues and eigenvectors of a Hermitian tridiagonal matrix.
 
     Parameters
     ----------
@@ -91,7 +91,7 @@ def eigh_tridiagonal(
     >>> beta = ivy.array([0., 1.])
     >>> y = ivy.eigh_tridiagonal(alpha, beta)
     >>> print(y)
-    ivy.array([0., 0.38196, 2.61803])
+    ivy.array([0., 0.38196602, 2.61803389])
 
     >>> alpha = ivy.array([0., 1., 2.])
     >>> beta = ivy.array([0., 1.])
@@ -99,22 +99,21 @@ def eigh_tridiagonal(
     ...     beta, select='v',
     ...     select_range=[0.2,3.0])
     >>> print(y)
-    ivy.array([0.38196, 2.61803])
+    ivy.array([0.38196602, 2.61803389])
 
-    >>> ivy.set_backend("tensorflow")
     >>> alpha = ivy.array([0., 1., 2., 3.])
     >>> beta = ivy.array([2., 1., 2.])
     >>> y = ivy.eigh_tridiagonal(alpha,
     ...     beta,
     ...     eigvals_only=False,
     ...     select='i',
-    ...     select_range=[1,2]
+    ...     select_range=[1,2],
     ...     tol=1.)
     >>> print(y)
-    (ivy.array([0.18749806, 2.81250191]), ivy.array([[ 0.350609  , -0.56713122],
-        [ 0.06563006, -0.74146169],
-        [-0.74215561, -0.0636413 ],
-        [ 0.56742489,  0.35291126]]))
+    (ivy.array([0.38196602, 2.61803389]), ivy.array([[ 0.35048741, -0.56710052],
+           [ 0.06693714, -0.74234426],
+           [-0.74234426, -0.06693714],
+           [ 0.56710052,  0.35048741]]))
 
     With :class:`ivy.Container` input:
 
@@ -123,7 +122,7 @@ def eigh_tridiagonal(
     >>> y = ivy.eigh_tridiagonal(alpha, beta)
     >>> print(y)
     {
-        a: ivy.array([-0.56155, 0., 3.56155]),
+        a: ivy.array([-0.56155282, 0., 3.56155276]),
         b: ivy.array([0., 2., 4.])
     }
 
@@ -132,19 +131,10 @@ def eigh_tridiagonal(
     >>> y = ivy.eigh_tridiagonal(alpha, beta)
     >>> print(y)
     {
-        a: ivy.array([-0.56155, 0., 3.56155]),
-        b: ivy.array([-0.82842, 2., 4.82842])
+        a: ivy.array([-0.56155282, 0., 3.56155276]),
+        b: ivy.array([-0.82842714, 2., 4.82842731])
     }
     """
-    if ivy.current_backend(alpha).backend == "tensorflow":
-        return ivy.current_backend(alpha).eigh_tridiagonal(
-            alpha,
-            beta,
-            eigvals_only=eigvals_only,
-            select=select,
-            select_range=select_range,
-            tol=tol,
-        )
     x = ivy.diag(alpha)
     y = ivy.diag(beta, k=1)
     z = ivy.diag(beta, k=-1)
@@ -170,14 +160,13 @@ def eigh_tridiagonal(
     return eigenvalues, eigenvectors
 
 
-eigh_tridiagonal.mixed_function = True
-
-
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
+@handle_device_shifting
 def diagflat(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -189,7 +178,8 @@ def diagflat(
     num_cols: int = -1,
     out: Optional[Union[ivy.Array, ivy.NativeArray]] = None,
 ) -> ivy.Array:
-    """Returns a two-dimensional array with the flattened input as a diagonal.
+    """
+    Return a two-dimensional array with the flattened input as a diagonal.
 
     Parameters
     ----------
@@ -238,11 +228,13 @@ def diagflat(
     )
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
+@handle_device_shifting
 def kron(
     a: Union[ivy.Array, ivy.NativeArray],
     b: Union[ivy.Array, ivy.NativeArray],
@@ -250,8 +242,9 @@ def kron(
     *,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Computes the Kronecker product, a composite array
-    made of blocks of the second array scaled by the first.
+    """
+    Compute the Kronecker product, a composite array made of blocks of the second array
+    scaled by the first.
 
     Parameters
     ----------
@@ -278,18 +271,21 @@ def kron(
     return current_backend(a, b).kron(a, b, out=out)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
+@handle_device_shifting
 def matrix_exp(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
     *,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Computes the matrix exponential of a square matrix.
+    """
+    Compute the matrix exponential of a square matrix.
 
     Parameters
     ----------
@@ -319,16 +315,19 @@ def matrix_exp(
     return current_backend(x).matrix_exp(x, out=out)
 
 
-@to_native_arrays_and_back
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@to_native_arrays_and_back
+@handle_device_shifting
 def eig(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
 ) -> Tuple[ivy.Array]:
-    """Computes eigenvalies and eigenvectors of x. Returns a tuple with two elements:
-    first is the set of eigenvalues, second is the set of eigenvectors.
+    """Compute eigenvalies and eigenvectors of x. Returns a tuple with two
+    elements: first is the set of eigenvalues, second is the set of
+    eigenvectors.
 
     Parameters
     ----------
@@ -380,15 +379,18 @@ def eig(
     return current_backend(x).eig(x)
 
 
-@to_native_arrays_and_back
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@to_native_arrays_and_back
+@handle_device_shifting
 def eigvals(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
 ) -> ivy.Array:
-    """Computes eigenvalues of x. Returns a set of eigenvalues.
+    """
+    Compute eigenvalues of x. Returns a set of eigenvalues.
 
     Parameters
     ----------
@@ -421,18 +423,21 @@ def eigvals(
     return current_backend(x).eigvals(x)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
+@handle_device_shifting
 def adjoint(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
     *,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Computes the complex conjugate transpose of x.
+    """
+    Compute the complex conjugate transpose of x.
 
     Parameters
     ----------
@@ -459,18 +464,20 @@ def adjoint(
     return current_backend(x).adjoint(x, out=out)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
+@handle_out_argument
+@to_native_arrays_and_back
 def multi_dot(
     x: Sequence[Union[ivy.Array, ivy.NativeArray]],
     /,
     *,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Compute the dot product of two or more matrices in a single function call,
-    while selecting the fastest evaluation order.
+    """
+    Compute the dot product of two or more matrices in a single function call, while
+    selecting the fastest evaluation order.
 
     Parameters
     ----------
@@ -509,11 +516,19 @@ def multi_dot(
     return current_backend(x).multi_dot(x, out=out)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
+multi_dot.mixed_backend_wrappers = {
+    "to_add": ("handle_device_shifting",),
+    "to_skip": (),
+}
+
+
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
+@handle_device_shifting
 def cond(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -521,7 +536,8 @@ def cond(
     p: Optional[Union[int, float, str]] = None,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Computes the condition number of x.
+    """
+    Compute the condition number of x.
 
     Parameters
     ----------
@@ -540,14 +556,72 @@ def cond(
 
     Examples
     --------
-        >>> x = ivy.array([[1., 2.],
-                           [3., 4.]])
-        >>> ivy.cond(x)
-        ivy.array(14.933034)
+    >>> x = ivy.array([[1., 2.],
+    ...                [3., 4.]])
+    >>> ivy.cond(x)
+    ivy.array(14.933034)
 
-        >>> x = ivy.array([[1., 2.],
-                            [3., 4.]])
-        >>> ivy.cond(x, p=ivy.inf)
+    >>> x = ivy.array([[1., 2.],
+    ...                     [3., 4.]])
+    >>> ivy.cond(x, p=ivy.inf)
         ivy.array(21.0)
     """
     return current_backend(x).cond(x, p=p, out=out)
+
+
+@handle_nestable
+@handle_out_argument
+@to_native_arrays_and_back
+@handle_exceptions
+def dot(
+    a: Union[ivy.Array, ivy.NativeArray],
+    b: Union[ivy.Array, ivy.NativeArray],
+    /,
+    *,
+    out: Optional[ivy.Array] = None,
+) -> ivy.Array:
+    """
+    Compute the dot product between two arrays `a` and `b` using the current backend's
+    implementation. The dot product is defined as the sum of the element-wise product of
+    the input arrays.
+
+    Parameters:
+    ----------
+    a
+        First input array.
+    b
+        Second input array.
+    out
+        Optional output array. If provided, the output array to store the result.
+
+    Returns:
+    -------
+    ret
+        The dot product of the input arrays.
+
+    Examples
+    --------
+    With :class:`ivy.Array` inputs:
+
+    >>> a = ivy.array([1, 2, 3])
+    >>> b = ivy.array([4, 5, 6])
+    >>> result = ivy.dot(a, b)
+    >>> print(result)
+    ivy.array(32)
+
+    >>> a = ivy.array([[1, 2], [3, 4]])
+    >>> b = ivy.array([[5, 6], [7, 8]])
+    >>> c = ivy.empty_like(d)
+    >>> ivy.dot(a, b, out=c)
+    >>> print(c)
+    ivy.array([[19, 22],
+           [43, 50]])
+
+    >>> a = ivy.array([[1.1, 2.3, -3.6]])
+    >>> b = ivy.array([[-4.8], [5.2], [6.1]])
+    >>> c = ivy.zeros((1, 1))
+    >>> ivy.dot(a, b, out=c)
+    >>> print(c)
+    ivy.array([[-15.28]])
+    """
+    return current_backend(a, b).dot(a, b, out=out)

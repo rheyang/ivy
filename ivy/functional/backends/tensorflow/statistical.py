@@ -1,5 +1,4 @@
 # global
-_round = round
 import tensorflow as tf
 from typing import Union, Optional, Sequence
 
@@ -8,13 +7,13 @@ import ivy
 from ivy.functional.ivy.statistical import _get_promoted_type_of_operands
 from ivy.func_wrapper import with_unsupported_dtypes
 from . import backend_version
-
+from ivy.utils.einsum_parser import legalise_einsum_expr
 
 # Array API Standard #
 # -------------------#
 
 
-@with_unsupported_dtypes({"2.9.1 and below": ("complex",)}, backend_version)
+@with_unsupported_dtypes({"2.13.0 and below": ("complex",)}, backend_version)
 def min(
     x: Union[tf.Tensor, tf.Variable],
     /,
@@ -27,7 +26,7 @@ def min(
     return tf.math.reduce_min(x, axis=axis, keepdims=keepdims)
 
 
-@with_unsupported_dtypes({"2.9.1 and below": ("complex",)}, backend_version)
+@with_unsupported_dtypes({"2.13.0 and below": ("complex",)}, backend_version)
 def max(
     x: Union[tf.Tensor, tf.Variable],
     /,
@@ -110,7 +109,7 @@ def sum(
     *,
     axis: Optional[Union[int, Sequence[int]]] = None,
     dtype: Optional[tf.DType] = None,
-    keepdims: bool = False,
+    keepdims: Optional[bool] = False,
     out: Optional[Union[tf.Tensor, tf.Variable]] = None,
 ) -> Union[tf.Tensor, tf.Variable]:
     dtype = ivy.as_native_dtype(dtype)
@@ -132,23 +131,18 @@ def var(
     if axis is None:
         axis = tuple(range(len(x.shape)))
     axis = (axis,) if isinstance(axis, int) else tuple(axis)
-    if correction == 0:
-        return tf.experimental.numpy.var(x, axis=axis, out=out, keepdims=keepdims)
     size = 1
     for a in axis:
         size *= x.shape[a]
     if size - correction <= 0:
-        ret = tf.experimental.numpy.var(x, axis=axis, out=out, keepdims=keepdims)
-        ret = ivy.full(ret.shape, float("nan"), dtype=ret.dtype)
+        ret = tf.math.reduce_variance(x, axis=axis, keepdims=keepdims)
+        ret = tf.cast(tf.fill(ret.shape, float("nan")), ret.dtype)
         return ret
     else:
-        return ivy.astype(
-            tf.math.multiply(
-                tf.experimental.numpy.var(x, axis=axis, out=out, keepdims=keepdims),
-                size / (size - correction),
-            ),
-            x.dtype,
-            copy=False,
+        return (
+            tf.math.reduce_variance(x, axis=axis, keepdims=keepdims)
+            * size
+            / (size - correction)
         )
 
 
@@ -156,7 +150,7 @@ def var(
 # ------#
 
 
-@with_unsupported_dtypes({"2.9.1 and below": ("float16", "bfloat16")}, backend_version)
+@with_unsupported_dtypes({"2.13.0 and below": "bfloat16"}, backend_version)
 def cumprod(
     x: Union[tf.Tensor, tf.Variable],
     /,
@@ -200,11 +194,15 @@ def cumsum(
     return tf.math.cumsum(x, axis, exclusive, reverse)
 
 
+@with_unsupported_dtypes(
+    {"2.13.0 and below": ("unsigned", "int8", "int16")},
+    backend_version,
+)
 def einsum(
     equation: str,
     *operands: Union[tf.Tensor, tf.Variable],
     out: Optional[Union[tf.Tensor, tf.Variable]] = None,
 ) -> Union[tf.Tensor, tf.Variable]:
     dtype = _get_promoted_type_of_operands(operands)
-    operands = (tf.cast(operand, tf.float32) for operand in operands)
+    equation = legalise_einsum_expr(*[equation, *operands])
     return tf.cast(tf.einsum(equation, *operands), dtype)

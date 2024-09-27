@@ -13,16 +13,16 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         beta: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        eigvals_only: bool = True,
-        select: str = "a",
+        eigvals_only: Union[bool, ivy.Container] = True,
+        select: Union[str, ivy.Container] = "a",
         select_range: Optional[
-            Union[Tuple[int, int], List[int], ivy.Array, ivy.NativeArray]
+            Union[Tuple[int, int], List[int], ivy.Array, ivy.NativeArray, ivy.Container]
         ] = None,
-        tol: Optional[float] = None,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        tol: Optional[Union[float, ivy.Container]] = None,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
     ) -> Union[ivy.Container, Tuple[ivy.Container, ivy.Container]]:
         """
         ivy.Container static method variant of ivy.eigh_tridiagonal. This method simply
@@ -107,21 +107,21 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         beta: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        eigvals_only: bool = True,
-        select: str = "a",
+        eigvals_only: Union[bool, ivy.Container] = True,
+        select: Union[str, ivy.Container] = "a",
         select_range: Optional[
-            Union[Tuple[int, int], List[int], ivy.Array, ivy.NativeArray]
+            Union[Tuple[int, int], List[int], ivy.Array, ivy.NativeArray, ivy.Container]
         ] = None,
-        tol: Optional[float] = None,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        tol: Optional[Union[float, ivy.Container]] = None,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
     ) -> Union[ivy.Container, Tuple[ivy.Container, ivy.Container]]:
         """
-        ivy.Container instance method variant of ivy.eigh_tridiagonal.
-        This method simply wraps the function, and so the docstring for
-        ivy.eigh_tridiagonal also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.eigh_tridiagonal. This method
+        simply wraps the function, and so the docstring for ivy.eigh_tridiagonal also
+        applies to this method with minimal changes.
 
         Parameters
         ----------
@@ -195,15 +195,15 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        offset: int = 0,
-        padding_value: float = 0,
-        align: str = "RIGHT_LEFT",
-        num_rows: int = -1,
-        num_cols: int = -1,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        offset: Union[int, ivy.Container] = 0,
+        padding_value: Union[float, ivy.Container] = 0,
+        align: Union[str, ivy.Container] = "RIGHT_LEFT",
+        num_rows: Union[int, ivy.Container] = -1,
+        num_cols: Union[int, ivy.Container] = -1,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         return ContainerBase.cont_multi_map_in_function(
@@ -225,21 +225,21 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        offset: int = 0,
-        padding_value: float = 0,
-        align: str = "RIGHT_LEFT",
-        num_rows: int = -1,
-        num_cols: int = -1,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        offset: Union[int, ivy.Container] = 0,
+        padding_value: Union[float, ivy.Container] = 0,
+        align: Union[str, ivy.Container] = "RIGHT_LEFT",
+        num_rows: Union[int, ivy.Container] = -1,
+        num_cols: Union[int, ivy.Container] = -1,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.diagflat.
-        This method simply wraps the function, and so the docstring for
-        ivy.diagflat also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.diagflat. This method simply wraps
+        the function, and so the docstring for ivy.diagflat also applies to this method
+        with minimal changes.
 
         Examples
         --------
@@ -271,16 +271,16 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         b: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.kron. This method simply wraps
-        the function, and so the docstring for ivy.kron also applies to this method
-        with minimal changes.
+        ivy.Container static method variant of ivy.kron. This method simply wraps the
+        function, and so the docstring for ivy.kron also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -323,16 +323,16 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         b: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.kron.
-        This method simply wraps the function, and so the docstring for
-        ivy.kron also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.kron. This method simply wraps the
+        function, and so the docstring for ivy.kron also applies to this method with
+        minimal changes.
 
         Examples
         --------
@@ -359,8 +359,8 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         return ContainerBase.cont_multi_map_in_function(
@@ -375,14 +375,14 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.diagflat.
-        This method simply wraps the function, and so the docstring for
-        ivy.diagflat also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.diagflat. This method simply wraps
+        the function, and so the docstring for ivy.diagflat also applies to this method
+        with minimal changes.
 
         Examples
         --------
@@ -408,15 +408,15 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.eig.
-        This method simply wraps the function, and so the docstring for
-        ivy.eig also applies to this method with minimal changes.
+        ivy.Container static method variant of ivy.eig. This method simply wraps the
+        function, and so the docstring for ivy.eig also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -461,15 +461,15 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.eig.
-        This method simply wraps the function, and so the docstring for
-        ivy.eig also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.eig. This method simply wraps the
+        function, and so the docstring for ivy.eig also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -514,15 +514,15 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.eigvals.
-        This method simply wraps the function, and so the docstring for
-        ivy.eigvals also applies to this method with minimal changes.
+        ivy.Container static method variant of ivy.eigvals. This method simply wraps the
+        function, and so the docstring for ivy.eigvals also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -561,15 +561,15 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.eigvals.
-        This method simply wraps the function, and so the docstring for
-        ivy.eigvals also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.eigvals. This method simply wraps
+        the function, and so the docstring for ivy.eigvals also applies to this method
+        with minimal changes.
 
         Parameters
         ----------
@@ -608,14 +608,14 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         x: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ):
         """
-        ivy.Container static method variant of ivy.adjoint. This method simply wraps
-        the function, and so the docstring for ivy.adjoint also applies to this method
-        with minimal changes.
+        ivy.Container static method variant of ivy.adjoint. This method simply wraps the
+        function, and so the docstring for ivy.adjoint also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -657,14 +657,14 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ):
         """
-        ivy.Container instance method variant of ivy.adjoint.
-        This method simply wraps the function, and so the docstring for
-        ivy.adjoint also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.adjoint. This method simply wraps
+        the function, and so the docstring for ivy.adjoint also applies to this method
+        with minimal changes.
 
         Examples
         --------
@@ -686,10 +686,10 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         x: Sequence[Union[ivy.Container, ivy.Array, ivy.NativeArray]],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
@@ -744,16 +744,16 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         arrays: Sequence[Union[ivy.Container, ivy.Array, ivy.NativeArray]],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = True,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.multi_dot.
-        This method simply wraps the function, and so the docstring for
-        ivy.multi_dot also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.multi_dot. This method simply wraps
+        the function, and so the docstring for ivy.multi_dot also applies to this method
+        with minimal changes.
 
         Examples
         --------
@@ -785,17 +785,17 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
-        p: Optional[Union[int, float, None]] = None,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        p: Optional[Union[int, float, None, ivy.Container]] = None,
         out: Optional[ivy.Container] = None,
     ):
         """
-        ivy.Container static method variant of ivy.cond.
-        This method simply wraps the function, and so the docstring for
-        ivy.cond also applies to this method with minimal changes.
+        ivy.Container static method variant of ivy.cond. This method simply wraps the
+        function, and so the docstring for ivy.cond also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -831,16 +831,16 @@ class _ContainerWithLinearAlgebraExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
-        p: Optional[Union[int, float, None]] = None,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        p: Optional[Union[int, float, None, ivy.Container]] = None,
     ):
         """
-        ivy.Container instance method variant of ivy.cond.
-        This method simply wraps the function, and so the docstring for
-        ivy.cond also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.cond. This method simply wraps the
+        function, and so the docstring for ivy.cond also applies to this method with
+        minimal changes.
 
         Parameters
         ----------

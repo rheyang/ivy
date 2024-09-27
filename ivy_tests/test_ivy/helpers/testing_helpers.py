@@ -8,11 +8,12 @@ from typing import List
 from hypothesis import given, strategies as st
 
 # local
-import ivy
 import ivy.functional.frontends.numpy as np_frontend
 from .hypothesis_helpers import number_helpers as nh
 from .globals import TestData
 from . import test_parameter_flags as pf
+from . import test_globals as t_globals
+from .pipeline_helper import update_backend
 from ivy_tests.test_ivy.helpers.test_parameter_flags import (
     BuiltInstanceStrategy,
     BuiltAsVariableStrategy,
@@ -22,18 +23,14 @@ from ivy_tests.test_ivy.helpers.test_parameter_flags import (
     BuiltWithOutStrategy,
     BuiltInplaceStrategy,
     BuiltCompileStrategy,
+    BuiltFrontendArrayStrategy,
 )
 from ivy_tests.test_ivy.helpers.structs import FrontendMethodData
-from ivy_tests.test_ivy.helpers.available_frameworks import (
-    available_frameworks,
-    ground_truth,
-)
+from ivy_tests.test_ivy.helpers.available_frameworks import available_frameworks
 from ivy_tests.test_ivy.helpers.hypothesis_helpers.dtype_helpers import (
     _dtype_kind_keys,
     _get_type_dict,
 )
-
-ground_truth = ground_truth()
 
 
 cmd_line_args = (
@@ -114,11 +111,13 @@ def num_positional_args(draw, *, fn_name: str = None):
     num_keyword_only = 0
     total = 0
     fn = None
-    for i, fn_name_key in enumerate(fn_name.split(".")):
-        if i == 0:
-            fn = ivy.__dict__[fn_name_key]
-        else:
-            fn = fn.__dict__[fn_name_key]
+    with update_backend(t_globals.CURRENT_BACKEND) as ivy_backend:
+        ivy_backend.utils.dynamic_import.import_module(fn_name.rpartition(".")[0])
+        for i, fn_name_key in enumerate(fn_name.split(".")):
+            if i == 0:
+                fn = ivy_backend.__dict__[fn_name_key]
+            else:
+                fn = fn.__dict__[fn_name_key]
     for param in inspect.signature(fn).parameters.values():
         if param.name == "self":
             continue
@@ -139,7 +138,8 @@ def num_positional_args(draw, *, fn_name: str = None):
 
 def _import_fn(fn_tree: str):
     """
-    Imports a function from function tree string
+    Import a function from function tree string.
+
     Parameters
     ----------
     fn_tree
@@ -162,7 +162,8 @@ def _get_method_supported_devices_dtypes(
     method_name: str, class_module: str, class_name: str
 ):
     """
-    Get supported devices and data types for a method in Ivy API
+    Get supported devices and data types for a method in Ivy API.
+
     Parameters
     ----------
     method_name
@@ -180,24 +181,23 @@ def _get_method_supported_devices_dtypes(
     for the method
     """
     supported_device_dtypes = {}
-    backends = available_frameworks()
-    for b in backends:  # ToDo can optimize this ?
-        ivy.set_backend(b)
-        _fn = getattr(class_module.__dict__[class_name], method_name)
-        devices_and_dtypes = ivy.function_supported_devices_and_dtypes(_fn)
-        organized_dtypes = {}
-        for device in devices_and_dtypes.keys():
-            organized_dtypes[device] = _partition_dtypes_into_kinds(
-                ivy, devices_and_dtypes[device]
-            )
-        supported_device_dtypes[b] = organized_dtypes
-        ivy.previous_backend()
+    for backend_str in available_frameworks:
+        with update_backend(backend_str) as backend:
+            _fn = getattr(class_module.__dict__[class_name], method_name)
+            devices_and_dtypes = backend.function_supported_devices_and_dtypes(_fn)
+            organized_dtypes = {}
+            for device in devices_and_dtypes.keys():
+                organized_dtypes[device] = _partition_dtypes_into_kinds(
+                    backend_str, devices_and_dtypes[device]
+                )
+            supported_device_dtypes[backend_str] = organized_dtypes
     return supported_device_dtypes
 
 
 def _get_supported_devices_dtypes(fn_name: str, fn_module: str):
     """
-    Get supported devices and data types for a function in Ivy API
+    Get supported devices and data types for a function in Ivy API.
+
     Parameters
     ----------
     fn_name
@@ -220,31 +220,52 @@ def _get_supported_devices_dtypes(fn_name: str, fn_module: str):
         if isinstance(getattr(fn_module_, fn_name), fn_module_.ufunc):
             fn_name = "_" + fn_name
 
-    backends = available_frameworks()
-    for b in backends:  # ToDo can optimize this ?
-        ivy.set_backend(b)
-        _tmp_mod = importlib.import_module(fn_module)
-        _fn = _tmp_mod.__dict__[fn_name]
-        devices_and_dtypes = ivy.function_supported_devices_and_dtypes(_fn)
-        try:
-            # Issue with bfloat16 and tensorflow
-            if "bfloat16" in devices_and_dtypes["gpu"]:
-                tmp = list(devices_and_dtypes["gpu"])
-                tmp.remove("bfloat16")
-                devices_and_dtypes["gpu"] = tuple(tmp)
-        except KeyError:
-            pass
-        organized_dtypes = {}
-        for device in devices_and_dtypes.keys():
-            organized_dtypes[device] = _partition_dtypes_into_kinds(
-                ivy, devices_and_dtypes[device]
+    for backend_str in available_frameworks:
+        with update_backend(backend_str) as ivy_backend:
+            _tmp_mod = ivy_backend.utils.dynamic_import.import_module(fn_module)
+            _fn = _tmp_mod.__dict__[fn_name]
+            # for partial mixed functions we should pass the backend function
+            # to ivy.function_supported_devices_and_dtypes
+            if (
+                hasattr(_fn, "mixed_backend_wrappers")
+                and ivy_backend.__dict__[fn_name] != _fn
+            ):
+                _fn = ivy_backend.__dict__[fn_name]
+            devices_and_dtypes = ivy_backend.function_supported_devices_and_dtypes(_fn)
+            devices_and_dtypes = (
+                tuple(devices_and_dtypes.values())
+                if "compositional" in devices_and_dtypes.keys()
+                else (devices_and_dtypes,)
             )
-        supported_device_dtypes[b] = organized_dtypes
-        ivy.previous_backend()
+            # Issue with bfloat16 and tensorflow
+            for device_and_dtype in devices_and_dtypes:
+                try:
+                    if "bfloat16" in device_and_dtype["gpu"]:
+                        tmp = list(device_and_dtype["gpu"])
+                        tmp.remove("bfloat16")
+                        device_and_dtype["gpu"] = tuple(tmp)
+                except KeyError:
+                    pass
+            organized_dtypes = {}
+            all_organized_dtypes = []
+            for device_and_dtype in devices_and_dtypes:
+                for device in device_and_dtype.keys():
+                    organized_dtypes[device] = _partition_dtypes_into_kinds(
+                        backend_str, device_and_dtype[device]
+                    )
+                all_organized_dtypes.append(organized_dtypes)
+            supported_device_dtypes[backend_str] = (
+                {
+                    "compositional": all_organized_dtypes[0],
+                    "primary": all_organized_dtypes[1],
+                }
+                if len(all_organized_dtypes) > 1
+                else all_organized_dtypes[0]
+            )
     return supported_device_dtypes
 
 
-def _partition_dtypes_into_kinds(framework, dtypes):
+def _partition_dtypes_into_kinds(framework: str, dtypes):
     partitioned_dtypes = {}
     for kind in _dtype_kind_keys:
         partitioned_dtypes[kind] = set(_get_type_dict(framework, kind)).intersection(
@@ -259,7 +280,7 @@ def _partition_dtypes_into_kinds(framework, dtypes):
 def handle_test(
     *,
     fn_tree: str = None,
-    ground_truth_backend: str = ground_truth,
+    ground_truth_backend: str = "tensorflow",
     number_positional_args=None,
     test_instance_method=BuiltInstanceStrategy,
     test_with_out=BuiltWithOutStrategy,
@@ -271,8 +292,9 @@ def handle_test(
     **_given_kwargs,
 ):
     """
-    A test wrapper for Ivy functions.
-    Sets the required test globals and creates test flags strategies.
+    Test wrapper for Ivy functions.
+
+    The wrapper sets the required test globals and creates test flags strategies.
 
     Parameters
     ----------
@@ -318,13 +340,14 @@ def handle_test(
         fn_tree = "ivy." + fn_tree
     is_hypothesis_test = len(_given_kwargs) != 0
 
-    possible_arguments = {"ground_truth_backend": st.just(ground_truth_backend)}
+    possible_arguments = {}
     if is_hypothesis_test and is_fn_tree_provided:
         # Use the default strategy
         if number_positional_args is None:
             number_positional_args = num_positional_args(fn_name=fn_tree)
         # Generate the test flags strategy
         possible_arguments["test_flags"] = pf.function_flags(
+            ground_truth_backend=st.just(ground_truth_backend),
             num_positional_args=number_positional_args,
             instance_method=test_instance_method,
             with_out=test_with_out,
@@ -356,8 +379,13 @@ def handle_test(
             def wrapped_test(*args, **kwargs):
                 try:
                     hypothesis_test_fn(*args, **kwargs)
-                except ivy.utils.exceptions.IvyNotImplementedException:
-                    pytest.skip("Function not implemented in backend.")
+                except Exception as e:
+                    # A string matching is used instead of actual exception due to
+                    # exception object in with_backend is different from global Ivy
+                    if e.__class__.__qualname__ == "IvyNotImplementedException":
+                        pytest.skip("Function not implemented in backend.")
+                    else:
+                        raise e
 
         else:
             wrapped_test = test_fn
@@ -370,8 +398,8 @@ def handle_test(
                 fn_name=fn_name,
                 supported_device_dtypes=supported_device_dtypes,
             )
-        wrapped_test.ground_truth_backend = ground_truth_backend
         wrapped_test._ivy_test = True
+        wrapped_test.ground_truth_backend = ground_truth_backend
 
         return wrapped_test
 
@@ -387,11 +415,13 @@ def handle_frontend_test(
     test_inplace=BuiltInplaceStrategy,
     as_variable_flags=BuiltAsVariableStrategy,
     native_array_flags=BuiltNativeArrayStrategy,
+    generate_frontend_arrays=BuiltFrontendArrayStrategy,
     **_given_kwargs,
 ):
     """
-    A test wrapper for Ivy frontend functions.
-    Sets the required test globals and creates test flags strategies.
+    Test wrapper for Ivy frontend functions.
+
+    The wrapper sets the required test globals and creates test flags strategies.
 
     Parameters
     ----------
@@ -417,6 +447,10 @@ def handle_frontend_test(
     native_array_flags
         A search strategy that generates a list of boolean flags for array inputs to be
         passed as a native array
+
+    generate_frontend_arrays
+        A search strategy that generates a list of boolean flags for array inputs to
+        be frontend array
     """
     fn_tree = "ivy.functional.frontends." + fn_tree
     if aliases is not None:
@@ -435,6 +469,7 @@ def handle_frontend_test(
             inplace=test_inplace,
             as_variable=as_variable_flags,
             native_arrays=native_array_flags,
+            generate_frontend_arrays=generate_frontend_arrays,
         )
 
     def test_wrapper(test_fn):
@@ -447,16 +482,31 @@ def handle_frontend_test(
             # Check if these arguments are being asked for
             possible_arguments = {
                 "test_flags": test_flags,
-                "fn_tree": st.sampled_from([fn_tree] + aliases)
-                if aliases is not None
-                else st.just(fn_tree),
+                "fn_tree": (
+                    st.sampled_from([fn_tree] + aliases)
+                    if aliases is not None
+                    else st.just(fn_tree)
+                ),
             }
             filtered_args = set(param_names).intersection(possible_arguments.keys())
             for key in filtered_args:
                 # extend Hypothesis given kwargs with our strategies
                 _given_kwargs[key] = possible_arguments[key]
             # Wrap the test with the @given decorator
-            wrapped_test = given(**_given_kwargs)(test_fn)
+            hypothesis_test_fn = given(**_given_kwargs)(test_fn)
+
+            @functools.wraps(hypothesis_test_fn)
+            def wrapped_test(*args, **kwargs):
+                try:
+                    hypothesis_test_fn(*args, **kwargs)
+                except Exception as e:
+                    # A string matching is used instead of actual exception due to
+                    # exception object in with_backend is different from global Ivy
+                    if e.__class__.__qualname__ == "IvyNotImplementedException":
+                        pytest.skip("Function not implemented in backend.")
+                    else:
+                        raise e
+
         else:
             wrapped_test = test_fn
 
@@ -485,8 +535,9 @@ def _import_method(method_tree: str):
 
 def handle_method(
     *,
+    init_tree: str = "",
     method_tree: str = None,
-    ground_truth_backend: str = ground_truth,
+    ground_truth_backend: str = "tensorflow",
     test_gradients=BuiltGradientStrategy,
     test_compile=BuiltCompileStrategy,
     init_num_positional_args=None,
@@ -499,8 +550,9 @@ def handle_method(
     **_given_kwargs,
 ):
     """
-    A test wrapper for Ivy methods.
-    Sets the required test globals and creates test flags strategies.
+    Test wrapper for Ivy methods.
+
+    The wrapper sets the required test globals and creates test flags strategies.
 
     Parameters
     ----------
@@ -526,9 +578,7 @@ def handle_method(
         )
 
         if init_num_positional_args is None:
-            init_num_positional_args = num_positional_args(
-                fn_name=class_name + ".__init__"
-            )
+            init_num_positional_args = num_positional_args(fn_name=init_tree)
 
         possible_arguments["init_flags"] = pf.init_method_flags(
             num_positional_args=init_num_positional_args,
@@ -570,8 +620,13 @@ def handle_method(
             def wrapped_test(*args, **kwargs):
                 try:
                     hypothesis_test_fn(*args, **kwargs)
-                except ivy.utils.exceptions.IvyNotImplementedException:
-                    pytest.skip("Function not implemented in backend.")
+                except Exception as e:
+                    # A string matching is used instead of actual exception due to
+                    # exception object in with_backend is different from global Ivy
+                    if e.__class__.__qualname__ == "IvyNotImplementedException":
+                        pytest.skip("Function not implemented in backend.")
+                    else:
+                        raise e
 
         else:
             wrapped_test = test_fn
@@ -606,8 +661,10 @@ def handle_frontend_method(
     **_given_kwargs,
 ):
     """
-    A test wrapper for Ivy frontends methods.
-    Sets the required test globals and creates test flags strategies.
+    Test wrapper for Ivy frontends methods.
+
+    The wrapper sets the required test globals and creates
+    test flags strategies.
 
     Parameters
     ----------
@@ -638,7 +695,7 @@ def handle_frontend_method(
     if is_hypothesis_test:
         callable_method = getattr(method_class, method_name)
         if init_num_positional_args is None:
-            init_num_positional_args = num_positional_args(fn_name=init_tree[4:])
+            init_num_positional_args = num_positional_args(fn_name=init_tree)
 
         if method_num_positional_args is None:
             method_num_positional_args = num_positional_args_method(
@@ -663,14 +720,8 @@ def handle_frontend_method(
                 as_variable=method_as_variable_flags,
                 native_arrays=method_native_arrays,
             )
-            try:
-                ivy_init_modules = importlib.import_module(ivy_init_module)
-            except Exception:
-                ivy_init_modules = str(ivy_init_module)
-            try:
-                framework_init_modules = importlib.import_module(framework_init_module)
-            except Exception:
-                framework_init_modules = str(framework_init_module)
+            ivy_init_modules = str(ivy_init_module)
+            framework_init_modules = str(framework_init_module)
             frontend_helper_data = FrontendMethodData(
                 ivy_init_module=ivy_init_modules,
                 framework_init_module=framework_init_modules,
@@ -688,7 +739,21 @@ def handle_frontend_method(
             for key in filtered_args:
                 # extend Hypothesis given kwargs with our strategies
                 _given_kwargs[key] = possible_arguments[key]
-            wrapped_test = given(**_given_kwargs)(test_fn)
+
+            hypothesis_test_fn = given(**_given_kwargs)(test_fn)
+
+            @functools.wraps(hypothesis_test_fn)
+            def wrapped_test(*args, **kwargs):
+                try:
+                    hypothesis_test_fn(*args, **kwargs)
+                except Exception as e:
+                    # A string matching is used instead of actual exception due to
+                    # exception object in with_backend is different from global Ivy
+                    if e.__class__.__qualname__ == "IvyNotImplementedException":
+                        pytest.skip("Function not implemented in backend.")
+                    else:
+                        raise e
+
         else:
             wrapped_test = test_fn
 

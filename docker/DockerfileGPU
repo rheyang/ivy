@@ -3,7 +3,7 @@
 
 ARG UBUNTU_VERSION=20.04
 ARG CUDA=11.2
-FROM nvidia/cuda:${CUDA}.1-base-ubuntu${UBUNTU_VERSION} as base
+FROM nvidia/cuda:${CUDA}.2-base-ubuntu${UBUNTU_VERSION} as base
 WORKDIR /ivy
 
 # For TensorFlow #
@@ -108,7 +108,7 @@ RUN git clone --recurse-submodules https://github.com/unifyai/ivy --depth 1 && \
     cat requirements/requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     cat requirements/optional_gpu.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 -m pip install --user -e . && \
-    cd ivy_tests/test_array_api && \
+    cd ivy_tests/array_api_testing/test_array_api && \
     pip3 install --no-cache-dir -r requirements.txt
 
 # Install local requirements

@@ -8,21 +8,21 @@ from ivy.data_classes.container.base import ContainerBase
 # noinspection PyMissingConstructor
 class _ContainerWithGradients(ContainerBase):
     @staticmethod
-    def static_stop_gradient(
+    def _static_stop_gradient(
         x: Union[ivy.Container, ivy.Array, ivy.NativeArray],
         /,
         *,
-        preserve_type: bool = True,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        preserve_type: Union[bool, ivy.Container] = True,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
         ivy.Container static method variant of ivy.stop_gradient. This method simply
-        wraps the function, and so the docstring for ivy.stop_gradient also applies
-        to this method with minimal changes.
+        wraps the function, and so the docstring for ivy.stop_gradient also applies to
+        this method with minimal changes.
 
         Parameters
         ----------
@@ -74,7 +74,6 @@ class _ContainerWithGradients(ContainerBase):
             a: ivy.array([0., 1., 2.]),
             b: ivy.array([3., 4., 5.])
         }
-
         """
         return ContainerBase.cont_multi_map_in_function(
             "stop_gradient",
@@ -91,17 +90,17 @@ class _ContainerWithGradients(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
-        preserve_type: bool = True,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        preserve_type: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
         ivy.Container instance method variant of ivy.stop_gradient. This method simply
-        wraps the function, and so the docstring for ivy.stop_gradient also applies
-        to this method with minimal changes.
+        wraps the function, and so the docstring for ivy.stop_gradient also applies to
+        this method with minimal changes.
 
         Parameters
         ----------
@@ -153,9 +152,8 @@ class _ContainerWithGradients(ContainerBase):
             a: ivy.array([0., 1., 2.]),
             b: ivy.array([3., 4., 5.])
         }
-
         """
-        return self.static_stop_gradient(
+        return self._static_stop_gradient(
             self,
             key_chains=key_chains,
             to_apply=to_apply,
@@ -169,12 +167,12 @@ class _ContainerWithGradients(ContainerBase):
         self: ivy.Container,
         mw: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         vw: Union[ivy.Array, ivy.NativeArray, ivy.Container],
-        step: Union[int, float],
+        step: Union[int, float, ivy.Container],
         /,
         *,
-        beta1: float = 0.9,
-        beta2: float = 0.999,
-        epsilon: float = 1e-7,
+        beta1: Union[float, ivy.Container] = 0.9,
+        beta2: Union[float, ivy.Container] = 0.999,
+        epsilon: Union[float, ivy.Container] = 1e-7,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
@@ -259,7 +257,6 @@ class _ContainerWithGradients(ContainerBase):
             a: ivy.array([0., 0.024, 0.096]),
             b: ivy.array([0.216, 0.384, 0.6])
         })
-
         """
         return ivy.adam_step(
             self, mw, vw, step, beta1=beta1, beta2=beta2, epsilon=epsilon, out=out
@@ -271,11 +268,12 @@ class _ContainerWithGradients(ContainerBase):
         lr: Union[float, ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        stop_gradients: bool = True,
+        stop_gradients: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
-        """Update weights ws of some function, given the true or effective derivatives
-        of some cost c with respect to ws, [dc/dw for w in ws].
+        """
+        Update weights ws of some function, given the true or effective derivatives of
+        some cost c with respect to ws, [dc/dw for w in ws].
 
         Parameters
         ----------
@@ -339,7 +337,6 @@ class _ContainerWithGradients(ContainerBase):
             a: ivy.array([0., 1., 2.]),
             b: ivy.array([3., 4., 5.])
         }
-
         """
         return ivy.optimizer_update(
             self, effective_grad, lr, stop_gradients=stop_gradients, out=out
@@ -351,14 +348,13 @@ class _ContainerWithGradients(ContainerBase):
         lr: Union[float, ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        stop_gradients: bool = True,
+        stop_gradients: Union[bool, ivy.Container] = True,
         out: ivy.Container = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.gradient_descent_update.
-        This method simply wraps the function, and so the docstring for
-        ivy.gradient_descent_update also applies to this method
-        with minimal changes.
+        ivy.Container instance method variant of ivy.gradient_descent_update. This
+        method simply wraps the function, and so the docstring for
+        ivy.gradient_descent_update also applies to this method with minimal changes.
 
         Parameters
         ----------
@@ -420,7 +416,6 @@ class _ContainerWithGradients(ContainerBase):
             a: ivy.array([0.85, 1.94, 2.97]),
             b: ivy.array([2.88, 4.69, 1.47])
         }
-
         """
         return ivy.gradient_descent_update(
             self,
@@ -436,11 +431,12 @@ class _ContainerWithGradients(ContainerBase):
         lr: Union[float, ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        decay_lambda: float = 0,
-        stop_gradients: bool = True,
+        decay_lambda: Union[float, ivy.Container] = 0,
+        stop_gradients: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ):
-        """Update weights ws of some function, given the derivatives of some cost c with
+        """
+        Update weights ws of some function, given the derivatives of some cost c with
         respect to ws, [dc/dw for w in ws], by applying Layerwise Adaptive Rate Scaling
         (LARS) method.
 
@@ -466,7 +462,6 @@ class _ContainerWithGradients(ContainerBase):
         -------
         ret
             The new function weights ws_new, following the LARS updates.
-
         """
         return ivy.lars_update(
             self,
@@ -483,16 +478,17 @@ class _ContainerWithGradients(ContainerBase):
         lr: Union[float, ivy.Array, ivy.NativeArray, ivy.Container],
         mw_tm1: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         vw_tm1: Union[ivy.Array, ivy.NativeArray, ivy.Container],
-        step: int,
+        step: Union[int, ivy.Container],
         /,
         *,
-        beta1: float = 0.9,
-        beta2: float = 0.999,
-        epsilon: float = 1e-7,
-        stop_gradients: bool = True,
+        beta1: Union[float, ivy.Container] = 0.9,
+        beta2: Union[float, ivy.Container] = 0.999,
+        epsilon: Union[float, ivy.Container] = 1e-7,
+        stop_gradients: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
-        """Update weights ws of some function, given the derivatives of some cost c with
+        """
+        Update weights ws of some function, given the derivatives of some cost c with
         respect to ws, using ADAM update. `[reference]
 
         <https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Adam>`_
@@ -580,7 +576,6 @@ class _ContainerWithGradients(ContainerBase):
             a: ivy.array([1.00000016e-05, 9.00000086e-05, 9.00000086e-05]),
             b: ivy.array([9.00000086e-05, 4.00000063e-05, 4.00000063e-05])
         })
-
         """
         return ivy.adam_update(
             self,
@@ -602,18 +597,19 @@ class _ContainerWithGradients(ContainerBase):
         lr: Union[float, ivy.Array, ivy.NativeArray, ivy.Container],
         mw_tm1: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         vw_tm1: Union[ivy.Array, ivy.NativeArray, ivy.Container],
-        step: int,
+        step: Union[int, ivy.Container],
         /,
         *,
-        beta1: float = 0.9,
-        beta2: float = 0.999,
-        epsilon: float = 1e-7,
-        max_trust_ratio: Union[int, float] = 10,
-        decay_lambda: float = 0,
-        stop_gradients: bool = True,
+        beta1: Union[float, ivy.Container] = 0.9,
+        beta2: Union[float, ivy.Container] = 0.999,
+        epsilon: Union[float, ivy.Container] = 1e-7,
+        max_trust_ratio: Union[int, float, ivy.Container] = 10,
+        decay_lambda: Union[float, ivy.Container] = 0,
+        stop_gradients: Union[bool, ivy.Container] = True,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
-        """Update weights ws of some function, given the derivatives of some cost c with
+        """
+        Update weights ws of some function, given the derivatives of some cost c with
         respect to ws, [dc/dw for w in ws], by applying LAMB method.
 
         Parameters
@@ -707,7 +703,6 @@ class _ContainerWithGradients(ContainerBase):
             a: ivy.array([4.0e-05, 9.0e-05, 3.6e-04]),
             b: ivy.array([0.00036, 0.00016, 0.00049])
         })
-
         """
         return ivy.lamb_update(
             self,

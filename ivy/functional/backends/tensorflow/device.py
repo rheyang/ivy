@@ -1,5 +1,8 @@
-"""Collection of TensorFlow general functions, wrapped to fit Ivy syntax and
-signature.
+"""
+Tensorflow device functions.
+
+Collection of TensorFlow general functions, wrapped to fit Ivy syntax
+and signature.
 """
 
 # global
@@ -94,6 +97,12 @@ def tpu_is_available() -> bool:
         return True
     except ValueError:
         return False
+
+
+def handle_soft_device_variable(*args, fn, **kwargs):
+    default_device = ivy.default_device(as_native=True)
+    with tf.device(default_device):
+        return fn(*args, **kwargs)
 
 
 class Profiler(BaseProfiler):

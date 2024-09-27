@@ -14,7 +14,7 @@ from ivy_tests.test_ivy.helpers import handle_frontend_test
                 num_arrays=2,
             )
         ],
-        get_dtypes_kind="bool",
+        special=True,
     ),
     where=np_frontend_helpers.where(),
     number_positional_args=np_frontend_helpers.get_num_positional_args_ufunc(
@@ -28,6 +28,7 @@ def test_numpy_logical_and(
     fn_tree,
     frontend,
     test_flags,
+    backend_fw,
 ):
     input_dtypes, x, casting, dtype = dtypes_values_casting
     where, input_dtypes, test_flags = np_frontend_helpers.handle_where_and_array_bools(
@@ -38,6 +39,7 @@ def test_numpy_logical_and(
 
     np_frontend_helpers.test_frontend_function(
         input_dtypes=input_dtypes,
+        backend_to_test=backend_fw,
         frontend=frontend,
         test_flags=test_flags,
         fn_tree=fn_tree,
@@ -63,7 +65,7 @@ def test_numpy_logical_and(
                 num_arrays=2,
             )
         ],
-        get_dtypes_kind="bool",
+        special=True,
     ),
     where=np_frontend_helpers.where(),
     number_positional_args=np_frontend_helpers.get_num_positional_args_ufunc(
@@ -77,6 +79,7 @@ def test_numpy_logical_or(
     fn_tree,
     frontend,
     test_flags,
+    backend_fw,
 ):
     input_dtypes, x, casting, dtype = dtypes_values_casting
     where, input_dtypes, test_flags = np_frontend_helpers.handle_where_and_array_bools(
@@ -86,6 +89,7 @@ def test_numpy_logical_or(
     )
     np_frontend_helpers.test_frontend_function(
         input_dtypes=input_dtypes,
+        backend_to_test=backend_fw,
         frontend=frontend,
         test_flags=test_flags,
         fn_tree=fn_tree,
@@ -110,7 +114,7 @@ def test_numpy_logical_or(
                 available_dtypes=("bool",),
             )
         ],
-        get_dtypes_kind="bool",
+        special=True,
     ),
     where=np_frontend_helpers.where(),
     number_positional_args=np_frontend_helpers.get_num_positional_args_ufunc(
@@ -124,6 +128,7 @@ def test_numpy_logical_not(
     fn_tree,
     frontend,
     test_flags,
+    backend_fw,
 ):
     input_dtypes, x, casting, _ = dtypes_values_casting
     where, input_dtypes, test_flags = np_frontend_helpers.handle_where_and_array_bools(
@@ -133,6 +138,7 @@ def test_numpy_logical_not(
     )
     np_frontend_helpers.test_frontend_function(
         input_dtypes=input_dtypes,
+        backend_to_test=backend_fw,
         frontend=frontend,
         test_flags=test_flags,
         fn_tree=fn_tree,
@@ -157,7 +163,7 @@ def test_numpy_logical_not(
                 num_arrays=2,
             )
         ],
-        get_dtypes_kind="bool",
+        special=True,
     ),
     where=np_frontend_helpers.where(),
     number_positional_args=np_frontend_helpers.get_num_positional_args_ufunc(
@@ -171,6 +177,7 @@ def test_numpy_logical_xor(
     fn_tree,
     frontend,
     test_flags,
+    backend_fw,
 ):
     input_dtypes, x, casting, dtype = dtypes_values_casting
     where, input_dtypes, test_flags = np_frontend_helpers.handle_where_and_array_bools(
@@ -180,6 +187,7 @@ def test_numpy_logical_xor(
     )
     np_frontend_helpers.test_frontend_function(
         input_dtypes=input_dtypes,
+        backend_to_test=backend_fw,
         frontend=frontend,
         test_flags=test_flags,
         fn_tree=fn_tree,

@@ -1,5 +1,4 @@
 # global
-import copy
 import inspect
 from typing import Callable, Dict
 import functools
@@ -7,17 +6,20 @@ import functools
 # local
 import ivy
 import ivy.functional.frontends.tensorflow as frontend
+import ivy.functional.frontends.numpy as np_frontend
 
 
 def to_ivy_dtype(dtype):
     if not dtype or isinstance(dtype, str):
         return dtype
+    if isinstance(dtype, np_frontend.dtype):
+        return dtype.ivy_dtype
     return frontend.as_dtype(dtype).ivy_dtype
 
 
 def handle_tf_dtype(fn: Callable) -> Callable:
     @functools.wraps(fn)
-    def new_fn(*args, dtype=None, **kwargs):
+    def _handle_tf_dtype(*args, dtype=None, **kwargs):
         if len(args) > (dtype_pos + 1):
             dtype = args[dtype_pos]
             kwargs = {
@@ -35,12 +37,14 @@ def handle_tf_dtype(fn: Callable) -> Callable:
         elif len(args) == (dtype_pos + 1):
             dtype = args[dtype_pos]
             args = args[:-1]
-        dtype = to_ivy_dtype(dtype)
-        return fn(*args, dtype=dtype, **kwargs)
+        if dtype is not None:
+            dtype = to_ivy_dtype(dtype)
+            return fn(*args, dtype=dtype, **kwargs)
+        return fn(*args, **kwargs)
 
     dtype_pos = list(inspect.signature(fn).parameters).index("dtype")
-    new_fn.handle_tf_dtype = True
-    return new_fn
+    _handle_tf_dtype.handle_tf_dtype = True
+    return _handle_tf_dtype
 
 
 def _tf_frontend_array_to_ivy(x):
@@ -67,10 +71,10 @@ def _to_ivy_array(x):
 
 def inputs_to_ivy_arrays(fn: Callable) -> Callable:
     @functools.wraps(fn)
-    def new_fn(*args, **kwargs):
+    def _inputs_to_ivy_arrays_tf(*args, **kwargs):
         """
-        Converts all `TensorFlow.Tensor` instances in both the positional and keyword
-        arguments into `ivy.Array` instances, and then calls the function with the
+        Convert all `TensorFlow.Tensor` instances in both the positional and keyword
+        arguments into `ivy.Array` instances, and then call the function with the
         updated arguments.
 
         Parameters
@@ -103,16 +107,16 @@ def inputs_to_ivy_arrays(fn: Callable) -> Callable:
             ivy_kwargs["out"] = out
         return fn(*ivy_args, **ivy_kwargs)
 
-    new_fn.inputs_to_ivy_arrays = True
-    return new_fn
+    _inputs_to_ivy_arrays_tf.inputs_to_ivy_arrays = True
+    return _inputs_to_ivy_arrays_tf
 
 
 def outputs_to_frontend_arrays(fn: Callable) -> Callable:
     @functools.wraps(fn)
-    def new_fn(*args, **kwargs):
+    def _outputs_to_frontend_arrays_tf(*args, **kwargs):
         """
-        Calls the function, and then converts all `tensorflow.Tensor` instances in
-        the function return into `ivy.Array` instances.
+        Call the function, and then convert all `tensorflow.Tensor` instances in the
+        function return into `ivy.Array` instances.
 
         Parameters
         ----------
@@ -134,8 +138,8 @@ def outputs_to_frontend_arrays(fn: Callable) -> Callable:
             ret, _ivy_array_to_tensorflow, include_derived={tuple: True}
         )
 
-    new_fn.outputs_to_frontend_arrays = True
-    return new_fn
+    _outputs_to_frontend_arrays_tf.outputs_to_frontend_arrays = True
+    return _outputs_to_frontend_arrays_tf
 
 
 def to_ivy_arrays_and_back(fn: Callable) -> Callable:
@@ -144,7 +148,8 @@ def to_ivy_arrays_and_back(fn: Callable) -> Callable:
 
 # update kwargs dictionary keys helper
 def _update_kwarg_keys(kwargs: Dict, to_update: Dict) -> Dict:
-    """A helper function for updating the key-word only arguments dictionary.
+    """
+    Update the key-word only arguments dictionary.
 
     Parameters
     ----------
@@ -160,21 +165,20 @@ def _update_kwarg_keys(kwargs: Dict, to_update: Dict) -> Dict:
     ret
         An updated dictionary with new keyword mapping
     """
-    updated_kwargs = copy.deepcopy(kwargs)
-    for key, val in to_update.items():
-        for k in kwargs.keys():
-            if key == k:
-                temp_key = updated_kwargs[k]
-                del updated_kwargs[k]
-                updated_kwargs[val] = temp_key
-    return updated_kwargs
+    new_kwargs = {}
+    for key, value in kwargs.items():
+        if to_update.__contains__(key):
+            new_kwargs.update({to_update[key]: value})
+        else:
+            new_kwargs.update({key: value})
+    return new_kwargs
 
 
 def map_raw_ops_alias(alias: callable, kwargs_to_update: Dict = None) -> callable:
     """
-    Mapping the raw_ops function with its respective frontend alias function,
-    as the implementations of raw_ops is way similar to that of frontend functions,
-    except that only arguments are passed as key-word only in raw_ops functions.
+    Map the raw_ops function with its respective frontend alias function, as the
+    implementations of raw_ops is way similar to that of frontend functions, except that
+    only arguments are passed as key-word only in raw_ops functions.
 
     Parameters
     ----------
@@ -196,12 +200,29 @@ def map_raw_ops_alias(alias: callable, kwargs_to_update: Dict = None) -> callabl
         # removing decorators from frontend function
         fn = inspect.unwrap(fn)
 
+        # changing all the params to keyword-only
+        sig = inspect.signature(fn)
+        new_params = []
+        kw_update_rev = (
+            {value: key for key, value in kw_update.items()} if kw_update else {}
+        )
+        for param in sig.parameters.values():
+            # updating the name of the parameter
+            name = (
+                kw_update_rev[param.name]
+                if kw_update and kw_update_rev.__contains__(param.name)
+                else param.name
+            )
+            new_params.append(param.replace(name=name, kind=param.KEYWORD_ONLY))
+        new_signature = sig.replace(parameters=new_params)
+
         def _wraped_fn(**kwargs):
             # update kwargs dictionary keys
             if kw_update:
                 kwargs = _update_kwarg_keys(kwargs, kw_update)
             return fn(**kwargs)
 
+        _wraped_fn.__signature__ = new_signature
         return _wraped_fn
 
     return _wrap_raw_ops_alias(alias, kwargs_to_update)

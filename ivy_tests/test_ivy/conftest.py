@@ -2,32 +2,13 @@
 import os
 import pytest
 from typing import Dict
-import subprocess
-import importlib
-
-mod_frontend = {
-    "tensorflow": None,
-    "numpy": None,
-    "jax": None,
-    "torch": None,
-}  # multiversion
-mod_backend = {
-    "tensorflow": None,
-    "numpy": None,
-    "jax": None,
-    "torch": None,
-}  # multiversion
-
-ground_backend = None  # multiversion
 
 # local
 import ivy_tests.test_ivy.helpers.test_parameter_flags as pf
-from ivy import DefaultDevice
 from ivy import set_exception_trace_mode
 from ivy_tests.test_ivy.helpers import globals as test_globals
-from ivy_tests.test_ivy.helpers.available_frameworks import available_frameworks
+from ivy_tests.test_ivy.helpers.available_frameworks import available_frameworks  # noqa
 
-available_frameworks = available_frameworks()
 GENERAL_CONFIG_DICT = {}
 UNSET_TEST_CONFIG = {"list": [], "flag": []}
 UNSET_TEST_API_CONFIG = {"list": [], "flag": []}
@@ -41,6 +22,7 @@ if "ARRAY_API_TESTS_MODULE" not in os.environ:
 
 def pytest_report_header(config):
     return [
+        f"backend(s): {config.getoption('backend')}",
         f"device: {config.getoption('device')}",
         f"number of Hypothesis examples: {config.getoption('num_examples')}",
     ]
@@ -69,45 +51,6 @@ def pytest_configure(config):
     else:
         backend_strs = raw_value.split(",")
 
-    # frontend
-    frontend = config.getoption("--frontend")
-    if frontend:
-        frontend_strs = frontend.split(",")
-        for i in frontend_strs:
-            process = subprocess.Popen(
-                [
-                    "/opt/miniconda/envs/multienv/bin/python",
-                    "multiversion_frontend_test.py",
-                    "numpy" + "/" + importlib.import_module("numpy").__version__,
-                    i,
-                ],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            mod_frontend[i.split("/")[0]] = [i, process]
-
-    # ground truth
-    ground_truth = config.getoption("--ground_truth")
-    global ground_backend
-    if ground_truth:
-        ground_backend = [
-            ground_truth,
-            subprocess.Popen(
-                [
-                    "/opt/miniconda/envs/multienv/bin/python",
-                    "multiversion_backend_test.py",
-                    "numpy" + "/" + importlib.import_module("numpy").__version__,
-                    ground_truth,
-                ],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            ),
-        ]
-
     # compile_graph
     raw_value = config.getoption("--compile_graph")
     if raw_value == "both":
@@ -135,69 +78,62 @@ def pytest_configure(config):
                 continue
             for compile_graph in compile_modes:
                 for implicit in implicit_modes:
-                    if "/" in backend_str:
-                        mod_backend[backend_str.split("/")[0]] = backend_str
-                        TEST_PARAMS_CONFIG.append(
-                            (
-                                device,
-                                test_globals.FWS_DICT[backend_str.split("/")[0]](
-                                    backend_str
-                                ),
-                                compile_graph,
-                                implicit,
-                            )
+                    TEST_PARAMS_CONFIG.append(
+                        (
+                            device,
+                            backend_str,
+                            compile_graph,
+                            implicit,
                         )
-                    else:
-                        TEST_PARAMS_CONFIG.append(
-                            (
-                                device,
-                                test_globals.FWS_DICT[backend_str](),
-                                compile_graph,
-                                implicit,
-                            )
-                        )
+                    )
 
     process_cl_flags(config)
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests(request, on_device, backend_fw, compile_graph, implicit):
-    ivy_test = hasattr(request.function, "_ivy_test")
-    if ivy_test:
-        try:
-            if ground_backend:
-                test_globals.setup_api_test(
-                    backend_fw.backend,
-                    ground_backend,
-                    on_device,
-                    request.function.test_data
-                    if hasattr(request.function, "test_data")
-                    else None,
-                )
-            else:
-                test_globals.setup_api_test(
-                    backend_fw.backend,
-                    request.function.ground_truth_backend,
-                    on_device,
-                    request.function.test_data
-                    if hasattr(request.function, "test_data")
-                    else None,
-                )
+    try:
+        test_globals.setup_api_test(
+            backend_fw,
+            (
+                request.function.ground_truth_backend
+                if hasattr(request.function, "ground_truth_backend")
+                else None
+            ),
+            on_device,
+            (
+                request.function.test_data
+                if hasattr(request.function, "test_data")
+                else None
+            ),
+        )
 
-        except Exception as e:
-            test_globals.teardown_api_test()
-            raise RuntimeError(f"Setting up test for {request.function} failed.") from e
-    with backend_fw.use:
-        with DefaultDevice(on_device):
-            yield
-    if ivy_test:
+    except Exception as e:
         test_globals.teardown_api_test()
+        raise RuntimeError(f"Setting up test for {request.function} failed.") from e
+
+    yield
+    test_globals.teardown_api_test()
 
 
 def pytest_generate_tests(metafunc):
-    metafunc.parametrize(
-        "on_device,backend_fw,compile_graph,implicit", TEST_PARAMS_CONFIG
-    )
+    # Skip backend test against groud truth backend
+    # This redundant and wastes resources, as we going to be comparing
+    # The backend against it self
+    if hasattr(metafunc.function, "ground_truth_backend"):
+        test_paramters = TEST_PARAMS_CONFIG.copy()
+        # Find the entries that contains the ground truth backend as it's backend
+        for entry in test_paramters.copy():
+            # Entry 1 is backend_fw
+            if entry[1] == metafunc.function.ground_truth_backend:
+                test_paramters.remove(entry)
+        metafunc.parametrize(
+            "on_device,backend_fw,compile_graph,implicit", test_paramters
+        )
+    else:
+        metafunc.parametrize(
+            "on_device,backend_fw,compile_graph,implicit", TEST_PARAMS_CONFIG
+        )
 
 
 def process_cl_flags(config) -> Dict[str, bool]:
@@ -236,13 +172,13 @@ def process_cl_flags(config) -> Dict[str, bool]:
         # when both flags are true
         if v[0] and v[1]:
             raise Exception(
-                f"--skip-{k}--testing and --with-{k}--testing flags cannot be used \
-                    together"
+                f"--skip-{k}--testing and --with-{k}--testing flags cannot be used "
+                "together"
             )
         if v[1] and no_extra_testing:
             raise Exception(
-                f"--with-{k}--testing and --no-extra-testing flags cannot be used \
-                    together"
+                f"--with-{k}--testing and --no-extra-testing flags cannot be used "
+                "together"
             )
         # skipping a test
         if v[0] or no_extra_testing:
@@ -258,6 +194,7 @@ def pytest_addoption(parser):
     parser.addoption("--compile_graph", action="store_true")
     parser.addoption("--with_implicit", action="store_true")
     parser.addoption("--frontend", action="store", default=None)
+    parser.addoption("--env", action="store", default=None)
     parser.addoption("--ground_truth", action="store", default=None)
     parser.addoption("--skip-variable-testing", action="store_true")
     parser.addoption("--skip-native-array-testing", action="store_true")

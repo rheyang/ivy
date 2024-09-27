@@ -32,10 +32,13 @@ def test_constant(
     class_name,
     method_name,
     ground_truth_backend,
+    backend_fw,
     init_flags,
     method_flags,
+    on_device,
 ):
     ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
         ground_truth_backend=ground_truth_backend,
         init_flags=init_flags,
         method_flags=method_flags,
@@ -51,6 +54,7 @@ def test_constant(
         init_with_v=init_with_v,
         method_with_v=method_with_v,
         test_values=False,
+        on_device=on_device,
     )
 
     assert ret_ivy.shape == ret_gt.shape
@@ -78,11 +82,14 @@ def test_zeros(
     method_with_v,
     class_name,
     method_name,
+    backend_fw,
     ground_truth_backend,
     init_flags,
     method_flags,
+    on_device,
 ):
     ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
         ground_truth_backend=ground_truth_backend,
         init_flags=init_flags,
         method_flags=method_flags,
@@ -98,6 +105,7 @@ def test_zeros(
         init_with_v=init_with_v,
         method_with_v=method_with_v,
         test_values=False,
+        on_device=on_device,
     )
 
     assert ret_ivy.shape == ret_gt.shape
@@ -125,11 +133,14 @@ def test_ones(
     method_with_v,
     class_name,
     method_name,
+    backend_fw,
     ground_truth_backend,
     init_flags,
     method_flags,
+    on_device,
 ):
     ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
         ground_truth_backend=ground_truth_backend,
         init_flags=init_flags,
         method_flags=method_flags,
@@ -145,6 +156,7 @@ def test_ones(
         init_with_v=init_with_v,
         method_with_v=method_with_v,
         test_values=False,
+        on_device=on_device,
     )
 
     assert ret_ivy.shape == ret_gt.shape
@@ -184,11 +196,14 @@ def test_uniform(
     method_with_v,
     class_name,
     method_name,
+    backend_fw,
     ground_truth_backend,
     init_flags,
     method_flags,
+    on_device,
 ):
     ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
         ground_truth_backend=ground_truth_backend,
         init_flags=init_flags,
         method_flags=method_flags,
@@ -211,6 +226,7 @@ def test_uniform(
         init_with_v=init_with_v,
         method_with_v=method_with_v,
         test_values=False,
+        on_device=on_device,
     )
     if fan_mode == "fan_in":
         fan = fan_in
@@ -251,11 +267,14 @@ def test_glorot_uniform(
     method_with_v,
     class_name,
     method_name,
+    backend_fw,
     ground_truth_backend,
     init_flags,
     method_flags,
+    on_device,
 ):
     ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
         ground_truth_backend=ground_truth_backend,
         init_flags=init_flags,
         method_flags=method_flags,
@@ -273,6 +292,7 @@ def test_glorot_uniform(
         init_with_v=init_with_v,
         method_with_v=method_with_v,
         test_values=False,
+        on_device=on_device,
     )
 
     bound = (6 / (fan_in + fan_out)) ** 0.5
@@ -307,11 +327,14 @@ def test_first_layer_siren(
     method_with_v,
     class_name,
     method_name,
+    backend_fw,
     ground_truth_backend,
     init_flags,
     method_flags,
+    on_device,
 ):
     ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
         ground_truth_backend=ground_truth_backend,
         init_flags=init_flags,
         method_flags=method_flags,
@@ -328,6 +351,7 @@ def test_first_layer_siren(
         init_with_v=init_with_v,
         method_with_v=method_with_v,
         test_values=False,
+        on_device=on_device,
     )
 
     bound = fan_in
@@ -360,11 +384,14 @@ def test_siren(
     method_with_v,
     class_name,
     method_name,
+    backend_fw,
     ground_truth_backend,
     init_flags,
     method_flags,
+    on_device,
 ):
     ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
         ground_truth_backend=ground_truth_backend,
         init_flags=init_flags,
         method_flags=method_flags,
@@ -381,6 +408,7 @@ def test_siren(
         init_with_v=init_with_v,
         method_with_v=method_with_v,
         test_values=False,
+        on_device=on_device,
     )
 
     bound = ((6 / fan_in) ** 0.5) / w0
@@ -430,11 +458,14 @@ def test_kaiming_normal(
     method_with_v,
     class_name,
     method_name,
+    backend_fw,
     ground_truth_backend,
     init_flags,
     method_flags,
+    on_device,
 ):
     ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
         ground_truth_backend=ground_truth_backend,
         init_flags=init_flags,
         method_flags=method_flags,
@@ -457,6 +488,77 @@ def test_kaiming_normal(
         init_with_v=init_with_v,
         method_with_v=method_with_v,
         test_values=False,
+        on_device=on_device,
+    )
+    assert ret_ivy.shape == ret_gt.shape
+    assert ret_ivy.dtype == ret_gt.dtype
+
+
+@handle_method(
+    method_tree="RandomNormal.create_variables",
+    mean=helpers.floats(
+        min_value=-1e5,
+        max_value=1e5,
+        small_abs_safety_factor=8,
+        safety_factor_scale="log",
+    ),
+    stddev=helpers.floats(
+        min_value=0,
+        max_value=1e5,
+        small_abs_safety_factor=8,
+        safety_factor_scale="log",
+    ),
+    shape=helpers.get_shape(),
+    # should be replaced with helpers.get_dtypes() but somehow it causes inconsistent data generation # noqa
+    dtype=st.sampled_from([None, "float64", "float32", "float16"]),
+    init_with_v=st.booleans(),
+    method_with_v=st.booleans(),
+    ground_truth_backend="numpy",
+    init_as_variable_flags=st.just([False]),
+    init_num_positional_args=st.just(0),
+    init_native_arrays=st.just([False]),
+    method_as_variable_flags=st.just([False]),
+    method_num_positional_args=st.just(0),
+    method_native_arrays=st.just([False]),
+    method_container_flags=st.just([False]),
+)
+def test_random_normal(
+    mean,
+    stddev,
+    shape,
+    dtype,
+    init_with_v,
+    method_with_v,
+    class_name,
+    method_name,
+    ground_truth_backend,
+    init_flags,
+    method_flags,
+    on_device,
+    backend_fw,
+):
+    ret_ivy, ret_gt = helpers.test_method(
+        backend_to_test=backend_fw,
+        ground_truth_backend=ground_truth_backend,
+        init_flags=init_flags,
+        method_flags=method_flags,
+        init_input_dtypes=[],
+        init_all_as_kwargs_np={
+            "mean": mean,
+            "stddev": stddev,
+        },
+        method_input_dtypes=[],
+        method_all_as_kwargs_np={
+            "var_shape": shape,
+            "device": "cpu",
+            "dtype": dtype,
+        },
+        class_name=class_name,
+        method_name=method_name,
+        init_with_v=init_with_v,
+        method_with_v=method_with_v,
+        test_values=False,
+        on_device=on_device,
     )
     assert ret_ivy.shape == ret_gt.shape
     assert ret_ivy.dtype == ret_gt.dtype

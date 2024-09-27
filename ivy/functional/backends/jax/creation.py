@@ -1,9 +1,11 @@
 # global
 from numbers import Number
-from typing import Union, Optional, List, Sequence
+import numpy as np
+from typing import Union, Optional, List, Sequence, Tuple
 
 import jax.dlpack
 import jax.numpy as jnp
+import jax._src as _src
 import jaxlib.xla_extension
 
 # local
@@ -14,9 +16,11 @@ from ivy.functional.backends.jax.device import _to_device
 from ivy.functional.ivy.creation import (
     asarray_to_native_arrays_and_back,
     asarray_infer_device,
+    asarray_infer_dtype,
     asarray_handle_nestable,
     NestedSequence,
     SupportsBufferProtocol,
+    asarray_inputs_to_native_shapes,
 )
 
 
@@ -49,8 +53,19 @@ def arange(
 @asarray_to_native_arrays_and_back
 @asarray_infer_device
 @asarray_handle_nestable
+@asarray_inputs_to_native_shapes
+@asarray_infer_dtype
 def asarray(
-    obj: Union[JaxArray, bool, int, float, NestedSequence, SupportsBufferProtocol],
+    obj: Union[
+        JaxArray,
+        bool,
+        int,
+        float,
+        tuple,
+        NestedSequence,
+        SupportsBufferProtocol,
+        np.ndarray,
+    ],
     /,
     *,
     copy: Optional[bool] = None,
@@ -58,24 +73,7 @@ def asarray(
     device: jaxlib.xla_extension.Device,
     out: Optional[JaxArray] = None,
 ) -> JaxArray:
-    if isinstance(obj, ivy.NativeArray) and not dtype:
-        if copy is True:
-            dtype = obj.dtype
-            ivy.utils.assertions._check_jax_x64_flag(dtype)
-            return _to_device(jnp.array(obj, dtype=dtype, copy=True), device=device)
-        else:
-            return _to_device(obj, device=device)
-    elif isinstance(obj, (list, tuple, dict)) and len(obj) != 0 and dtype is None:
-        dtype = ivy.default_dtype(item=obj, as_native=True)
-        ivy.utils.assertions._check_jax_x64_flag(dtype)
-        if copy is True:
-            return _to_device(jnp.array(obj, dtype=dtype, copy=True), device=device)
-        else:
-            return _to_device(jnp.asarray(obj, dtype=dtype), device=device)
-    else:
-        dtype = ivy.default_dtype(dtype=dtype, item=obj)
-        ivy.utils.assertions._check_jax_x64_flag(dtype)
-
+    ivy.utils.assertions._check_jax_x64_flag(dtype)
     if copy is True:
         return _to_device(jnp.array(obj, dtype=dtype, copy=True), device=device)
     else:
@@ -214,7 +212,7 @@ def linspace(
         if endpoint:
             out = jax.lax.concatenate(
                 [out, jax.lax.expand_dims(broadcast_stop, (axis,))],
-                jax._src.util.canonicalize_axis(axis, out.ndim),
+                _src.util.canonicalize_axis(axis, out.ndim),
             )
 
     elif num == 1:
@@ -238,6 +236,7 @@ def meshgrid(
     *arrays: JaxArray,
     sparse: bool = False,
     indexing: str = "xy",
+    out: Optional[JaxArray] = None,
 ) -> List[JaxArray]:
     return jnp.meshgrid(*arrays, sparse=sparse, indexing=indexing)
 
@@ -305,9 +304,14 @@ array = asarray
 def copy_array(
     x: JaxArray, *, to_ivy_array: bool = True, out: Optional[JaxArray] = None
 ) -> JaxArray:
+    x = (
+        jax.core.ShapedArray(x.shape, x.dtype)
+        if isinstance(x, jax.core.ShapedArray)
+        else jnp.array(x)
+    )
     if to_ivy_array:
-        return ivy.to_ivy(jnp.array(x))
-    return jnp.array(x)
+        return ivy.to_ivy(x)
+    return x
 
 
 def one_hot(
@@ -344,3 +348,26 @@ def one_hot(
         res = jnp.moveaxis(res, -1, axis)
 
     return _to_device(res, device)
+
+
+def frombuffer(
+    buffer: bytes,
+    dtype: Optional[jnp.dtype] = float,
+    count: Optional[int] = -1,
+    offset: Optional[int] = 0,
+) -> JaxArray:
+    return jnp.frombuffer(buffer, dtype=dtype, count=count, offset=offset)
+
+
+def triu_indices(
+    n_rows: int,
+    n_cols: Optional[int] = None,
+    k: int = 0,
+    /,
+    *,
+    device: jaxlib.xla_extension.Device,
+) -> Tuple[JaxArray]:
+    return _to_device(
+        jnp.triu_indices(n=n_rows, k=k, m=n_cols),
+        device=device,
+    )

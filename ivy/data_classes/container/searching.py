@@ -10,20 +10,20 @@ from ivy.data_classes.container.base import ContainerBase
 # noinspection PyMissingConstructor
 class _ContainerWithSearching(ContainerBase):
     @staticmethod
-    def static_argmax(
+    def _static_argmax(
         x: Union[ivy.Container, ivy.Array, ivy.NativeArray],
         /,
         *,
-        axis: Optional[int] = None,
-        keepdims: bool = False,
-        dtype: Optional[Union[ivy.Dtype, ivy.NativeDtype]] = None,
-        select_last_index: bool = False,
+        axis: Optional[Union[int, ivy.Container]] = None,
+        keepdims: Union[bool, ivy.Container] = False,
+        dtype: Optional[Union[ivy.Dtype, ivy.NativeDtype, ivy.Container]] = None,
+        select_last_index: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.argmax. This method simply
-        wraps the function, and so the docstring for ivy.argmax also applies
-        to this method with minimal changes.
+        ivy.Container static method variant of ivy.argmax. This method simply wraps the
+        function, and so the docstring for ivy.argmax also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -75,16 +75,16 @@ class _ContainerWithSearching(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        axis: Optional[int] = None,
-        keepdims: bool = False,
-        dtype: Optional[Union[ivy.Dtype, ivy.NativeDtype]] = None,
-        select_last_index: bool = False,
+        axis: Optional[Union[int, ivy.Container]] = None,
+        keepdims: Union[bool, ivy.Container] = False,
+        dtype: Optional[Union[ivy.Dtype, ivy.NativeDtype, ivy.Container]] = None,
+        select_last_index: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.argmax. This method simply
-        wraps the function, and so the docstring for ivy.argmax also applies
-        to this method with minimal changes.
+        ivy.Container instance method variant of ivy.argmax. This method simply wraps
+        the function, and so the docstring for ivy.argmax also applies to this method
+        with minimal changes.
 
         Parameters
         ----------
@@ -123,7 +123,7 @@ class _ContainerWithSearching(ContainerBase):
                           [0]])
         }
         """
-        return self.static_argmax(
+        return self._static_argmax(
             self,
             axis=axis,
             keepdims=keepdims,
@@ -133,20 +133,20 @@ class _ContainerWithSearching(ContainerBase):
         )
 
     @staticmethod
-    def static_argmin(
+    def _static_argmin(
         x: Union[ivy.Container, ivy.Array, ivy.NativeArray],
         /,
         *,
-        axis: Optional[int] = None,
-        keepdims: bool = False,
-        output_dtype: Optional[Union[ivy.int32, ivy.int64]] = None,
-        select_last_index: bool = False,
+        axis: Optional[Union[int, ivy.Container]] = None,
+        keepdims: Union[bool, ivy.Container] = False,
+        dtype: Optional[Union[ivy.int32, ivy.int64, ivy.Container]] = None,
+        select_last_index: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.argmin. This method simply
-        wraps the function, and so the docstring for ivy.argmin also applies
-        to this method with minimal changes.
+        ivy.Container static method variant of ivy.argmin. This method simply wraps the
+        function, and so the docstring for ivy.argmin also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -160,7 +160,7 @@ class _ContainerWithSearching(ContainerBase):
             singleton dimensions, and, accordingly, the result must be compatible with
             the input array (see Broadcasting). Otherwise, if False, the reduced axes
             (dimensions) must not be included in the result. Default = False.
-        output_dtype
+        dtype
             An optional output_dtype from: int32, int64. Defaults to int64.
         out
             optional output container, for writing the result to. It must have a shape
@@ -190,7 +190,7 @@ class _ContainerWithSearching(ContainerBase):
             x,
             axis=axis,
             keepdims=keepdims,
-            output_dtype=output_dtype,
+            dtype=dtype,
             select_last_index=select_last_index,
             out=out,
         )
@@ -199,16 +199,16 @@ class _ContainerWithSearching(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        axis: Optional[int] = None,
-        keepdims: bool = False,
-        output_dtype: Optional[Union[ivy.Dtype, ivy.NativeDtype]] = None,
-        select_last_index: bool = False,
+        axis: Optional[Union[int, ivy.Container]] = None,
+        keepdims: Union[bool, ivy.Container] = False,
+        dtype: Optional[Union[ivy.Dtype, ivy.NativeDtype, ivy.Container]] = None,
+        select_last_index: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.argmin. This method simply
-        wraps the function, and so the docstring for ivy.argmin also applies
-        to this method with minimal changes.
+        ivy.Container instance method variant of ivy.argmin. This method simply wraps
+        the function, and so the docstring for ivy.argmin also applies to this method
+        with minimal changes.
 
         Parameters
         ----------
@@ -222,7 +222,7 @@ class _ContainerWithSearching(ContainerBase):
             singleton dimensions, and, accordingly, the result must be compatible with
             the input array (see Broadcasting). Otherwise, if False, the reduced axes
             (dimensions) must not be included in the result. Default = False.
-        output_dtype
+        dtype
             An optional output_dtype from: int32, int64. Defaults to int64.
         out
             optional output container, for writing the result to. It must have a shape
@@ -242,12 +242,12 @@ class _ContainerWithSearching(ContainerBase):
         >>> y = x.argmin()
         >>> print(y)
         {
-            a:ivy.array(1),
-            b:ivy.array(0)
+            a: ivy.array(1),
+            b: ivy.array(0)
         }
 
-        >>> x = ivy.Container(a=ivy.array([[4., 0., -1.], [2., -3., 6]]),\
-        ...                   b=ivy.array([[1., 2., 3.], [1., 1., 1.]])
+        >>> x = ivy.Container(a=ivy.array([[4., 0., -1.], [2., -3., 6]]),
+        ...                   b=ivy.array([[1., 2., 3.], [1., 1., 1.]]))
         >>> y = x.argmin(axis=1, keepdims=True)
         >>> print(y)
         {
@@ -257,28 +257,28 @@ class _ContainerWithSearching(ContainerBase):
                           [0]])
         }
         """
-        return self.static_argmin(
+        return self._static_argmin(
             self,
             axis=axis,
             keepdims=keepdims,
-            output_dtype=output_dtype,
+            dtype=dtype,
             select_last_index=select_last_index,
             out=out,
         )
 
     @staticmethod
-    def static_nonzero(
+    def _static_nonzero(
         x: Union[ivy.Container, ivy.Array, ivy.NativeArray],
         /,
         *,
-        as_tuple: bool = True,
-        size: Optional[int] = None,
-        fill_value: Number = 0,
+        as_tuple: Union[bool, ivy.Container] = True,
+        size: Optional[Union[int, ivy.Container]] = None,
+        fill_value: Union[Number, ivy.Container] = 0,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.nonzero. This method simply
-        wraps the function, and so the docstring for ivy.nonzero also applies
-        to this method with minimal changes.
+        ivy.Container static method variant of ivy.nonzero. This method simply wraps the
+        function, and so the docstring for ivy.nonzero also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -302,7 +302,6 @@ class _ContainerWithSearching(ContainerBase):
         -------
         ret
             a container containing the indices of the nonzero values.
-
         """
         return ContainerBase.cont_multi_map_in_function(
             "nonzero", x, as_tuple=as_tuple, size=size, fill_value=fill_value
@@ -312,14 +311,14 @@ class _ContainerWithSearching(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        as_tuple: bool = True,
-        size: Optional[int] = None,
-        fill_value: Number = 0,
+        as_tuple: Union[bool, ivy.Container] = True,
+        size: Optional[Union[int, ivy.Container]] = None,
+        fill_value: Union[Number, ivy.Container] = 0,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.nonzero. This method simply
-        wraps the function, and so the docstring for ivy.nonzero also applies
-        to this method with minimal changes.
+        ivy.Container instance method variant of ivy.nonzero. This method simply wraps
+        the function, and so the docstring for ivy.nonzero also applies to this method
+        with minimal changes.
 
         Parameters
         ----------
@@ -343,14 +342,13 @@ class _ContainerWithSearching(ContainerBase):
         -------
         ret
             a container containing the indices of the nonzero values.
-
         """
-        return self.static_nonzero(
+        return self._static_nonzero(
             self, as_tuple=as_tuple, size=size, fill_value=fill_value
         )
 
     @staticmethod
-    def static_where(
+    def _static_where(
         condition: Union[ivy.Container, ivy.Array, ivy.NativeArray],
         x1: Union[ivy.Container, ivy.Array, ivy.NativeArray],
         x2: Union[ivy.Container, ivy.Array, ivy.NativeArray],
@@ -359,9 +357,9 @@ class _ContainerWithSearching(ContainerBase):
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.where. This method simply
-        wraps the function, and so the docstring for ivy.where also applies
-        to this method with minimal changes.
+        ivy.Container static method variant of ivy.where. This method simply wraps the
+        function, and so the docstring for ivy.where also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -405,9 +403,9 @@ class _ContainerWithSearching(ContainerBase):
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.where. This method simply
-        wraps the function, and so the docstring for ivy.where also applies
-        to this method with minimal changes.
+        ivy.Container instance method variant of ivy.where. This method simply wraps the
+        function, and so the docstring for ivy.where also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -434,30 +432,30 @@ class _ContainerWithSearching(ContainerBase):
         >>> res = x1.where((x1.a > x2.a), x2)
         >>> print(res)
         {
-            a: ivy.array([3, 7, 5]),
-            b: ivy.array([2, 8, 6])
+            a: ivy.array([1, 0, 1]),
+            b: ivy.array([1, 0, 1])
         }
         """
-        return self.static_where(self, x1, x2, out=out)
+        return self._static_where(self, x1, x2, out=out)
 
     # Extra #
     # ----- #
 
     @staticmethod
-    def static_argwhere(
+    def _static_argwhere(
         x: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.argwhere. This method
-        simply wraps the function, and so the docstring for ivy.argwhere
-        also applies to this method with minimal changes.
+        ivy.Container static method variant of ivy.argwhere. This method simply wraps
+        the function, and so the docstring for ivy.argwhere also applies to this method
+        with minimal changes.
 
         Parameters
         ----------
@@ -514,16 +512,16 @@ class _ContainerWithSearching(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ):
         """
-        ivy.Container instance method variant of ivy.argwhere. This method
-        simply wraps the function, and so the docstring for ivy.argwhere
-        also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.argwhere. This method simply wraps
+        the function, and so the docstring for ivy.argwhere also applies to this method
+        with minimal changes.
 
         Parameters
         ----------
@@ -565,9 +563,8 @@ class _ContainerWithSearching(ContainerBase):
             a: ivy.array([[0]]),
             b: ivy.array([[0], [1]])
         }
-
         """
-        return self.static_argwhere(
+        return self._static_argwhere(
             self,
             key_chains=key_chains,
             to_apply=to_apply,

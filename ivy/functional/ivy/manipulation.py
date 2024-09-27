@@ -14,6 +14,8 @@ from ivy.func_wrapper import (
     handle_nestable,
     handle_array_like_without_promotion,
     handle_view,
+    handle_device_shifting,
+    handle_backend_invalid,
 )
 from ivy.utils.exceptions import handle_exceptions
 
@@ -35,11 +37,13 @@ def _calculate_out_shape(axis, array_shape):
 # -------------------#
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def concat(
     xs: Union[
         Tuple[Union[ivy.Array, ivy.NativeArray], ...],
@@ -50,7 +54,8 @@ def concat(
     axis: int = 0,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Joins a sequence of arrays along an existing axis.
+    """
+    Join a sequence of arrays along an existing axis.
 
     Parameters
     ----------
@@ -74,7 +79,8 @@ def concat(
 
     This function conforms to the `Array API Standard
     <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.concat.html>`_ # noqa
+    `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.concat.html>`_
     in the standard.
 
     Both the description and the type hints above assumes an array input for simplicity,
@@ -87,33 +93,42 @@ def concat(
     >>> y = ivy.array([[5, 6]])
     >>> ivy.concat((x, y))
     ivy.array([[1, 2],[3, 4],[5, 6]])
-
     """
     return current_backend(xs[0]).concat(xs, axis=axis, out=out)
 
 
-@handle_view
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_view
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def expand_dims(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
     *,
     copy: Optional[bool] = None,
-    axis: Union[int, Sequence[int]],
+    axis: Union[int, Sequence[int]] = 0,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Expands the shape of an array by inserting a new axis (dimension) of size one
-    at the position specified by axis
+    """
+    Expand the shape of an array by inserting a new axis (dimension) of size one at the
+    position specified by axis.
 
     Parameters
     ----------
     x
         input array.
+    copy
+        boolean indicating whether to copy the input array.
+        If True, the function must always copy.
+        If False, the function must never copy and must
+        raise a ValueError in case a copy would be necessary.
+        If None, the function must reuse existing memory buffer if possible
+        and copy otherwise. Default: ``None``.
     axis
         axis position (zero-based). If x has rank (i.e, number of dimensions) N, a
         valid axis must reside on the closed-interval [-N-1, N]. If provided a negative
@@ -134,8 +149,9 @@ def expand_dims(
 
 
     This function conforms to the `Array API Standard
-    <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the `docstring # noqa
-    <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.expand_dims.html>`_ # noqa
+    <https://data-apis.org/array-api/latest/>`_. This docstring is an
+    extension of the `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.expand_dims.html>`_
     in the standard.
 
     Both the description and the type hints above assumes an array input for simplicity,
@@ -146,29 +162,30 @@ def expand_dims(
     --------
     With :class:`ivy.Array` input:
 
-    >>> x = ivy.array([0, 1, 2]) #x.shape->(3,)
-    >>> y = ivy.expand_dims(x) #y.shape->(1, 3)
+    >>> x = ivy.array([0, 1, 2])
+    >>> y = ivy.expand_dims(x)
     >>> print(y)
     ivy.array([[0, 1, 2]])
 
     >>> x = ivy.array([[0.5, -0.7, 2.4],
-    ...                [  1,    2,   3]]) #x.shape->(2, 3)
+    ...                [  1,    2,   3]])
     >>> y = ivy.zeros((2, 1, 3))
-    >>> ivy.expand_dims(x, axis=1, out=y) #y.shape->(2, 1, 3)
+    >>> ivy.expand_dims(x, axis=1, out=y)
     >>> print(y)
     ivy.array([[[0.5, -0.7, 2.4]],
                [[ 1.,   2.,  3.]]])
 
     >>> x = ivy.array([[-1, -2],
-    ...                [ 3,  4]]) #x.shape->(2, 2)
-    >>> ivy.expand_dims(x, axis=0, out=x) #x.shape->(1, 2, 2)
-    >>> print(x)
+    ...                [ 3,  4]])
+    >>> y = ivy.zeros((1, 2, 2))
+    >>> ivy.expand_dims(x, axis=0, out=y)
+    >>> print(y)
     ivy.array([[[-1, -2],
                 [3,  4]]])
 
     >>> x = ivy.array([[-1.1, -2.2, 3.3],
-    ...                [ 4.4,  5.5, 6.6]]) #x.shape->(2, 3)
-    >>> y = ivy.expand_dims(x, axis=(0, -1)) #y.shape->(1, 2, 3, 1)
+    ...                [ 4.4,  5.5, 6.6]])
+    >>> y = ivy.expand_dims(x, axis=(0, -1))
     >>> print(y)
     ivy.array([[[[-1.1],
                  [-2.2],
@@ -178,8 +195,8 @@ def expand_dims(
                  [ 6.6]]]])
 
     >>> x = ivy.array([[-1.7, -3.2, 2.3],
-    ...                [ 6.3,  1.4, 5.7]]) #x.shape->(2, 3)
-    >>> y = ivy.expand_dims(x, axis=[0, 1, -1]) ##y.shape->(1, 1, 2, 3, 1)
+    ...                [ 6.3,  1.4, 5.7]])
+    >>> y = ivy.expand_dims(x, axis=[0, 1, -1])
     >>> print(y)
     ivy.array([[[[[-1.7],
                   [-3.2],
@@ -220,13 +237,15 @@ def expand_dims(
     return current_backend(x).expand_dims(x, copy=copy, axis=axis, out=out)
 
 
-@handle_view
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_view
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def flip(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -235,13 +254,21 @@ def flip(
     axis: Optional[Union[int, Sequence[int]]] = None,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Reverses the order of elements in an array along the given axis. The shape of the
+    """
+    Reverses the order of elements in an array along the given axis. The shape of the
     array must be preserved.
 
     Parameters
     ----------
     x
         input array.
+    copy
+        boolean indicating whether to copy the input array.
+        If True, the function must always copy.
+        If False, the function must never copy and must
+        raise a ValueError in case a copy would be necessary.
+        If None, the function must reuse existing memory buffer if possible
+        and copy otherwise. Default: ``None``.
     axis
         axis (or axes) along which to flip. If axis is None, all input array axes are
         flipped. If axis is negative, axis is counted from the last dimension. If
@@ -259,7 +286,8 @@ def flip(
 
     This function conforms to the `Array API Standard
     <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.flip.html>`_ # noqa
+    `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.flip.html>`_
     in the standard.
 
 
@@ -277,14 +305,14 @@ def flip(
     ivy.array([5, 4, 3])
 
     >>> x = ivy.array([[1, 2, 3], [4, 5, 6]])
-    >>> y = ivy.zeros((3, 3))
+    >>> y = ivy.zeros((2, 3))
     >>> ivy.flip(x, out=y)
     >>> print(y)
     ivy.array([[6, 5, 4],
                [3, 2, 1]])
 
     >>> x = ivy.array([[1, 2, 3], [4, 5, 6]])
-    >>> y = ivy.zeros((3, 3))
+    >>> y = ivy.zeros((2, 3))
     >>> ivy.flip(x, axis=0, out=y)
     >>> print(y)
     ivy.array([[4, 5, 6],
@@ -302,18 +330,19 @@ def flip(
                 [ 3,  2,  1]],
                [[12, 11, 10],
                 [ 9,  8,  7]]])
-
     """
     return current_backend(x).flip(x, copy=copy, axis=axis, out=out)
 
 
-@handle_view
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_view
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def permute_dims(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -322,7 +351,8 @@ def permute_dims(
     copy: Optional[bool] = None,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Permutes the axes (dimensions) of an array x.
+    """
+    Permutes the axes (dimensions) of an array x.
 
     Parameters
     ----------
@@ -331,6 +361,13 @@ def permute_dims(
     axes
         tuple containing a permutation of (0, 1, ..., N-1) where N is the number of axes
         (dimensions) of x.
+    copy
+        boolean indicating whether to copy the input array.
+        If True, the function must always copy.
+        If False, the function must never copy and must
+        raise a ValueError in case a copy would be necessary.
+        If None, the function must reuse existing memory buffer if possible
+        and copy otherwise. Default: ``None``.
     out
         optional output array, for writing the result to. It must have a shape that the
         inputs broadcast to.
@@ -344,7 +381,8 @@ def permute_dims(
 
     This function conforms to the `Array API Standard
     <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.permute_dims.html>`_ # noqa
+    `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.permute_dims.html>`_
     in the standard.
 
     Both the description and the type hints above assumes an array input for simplicity,
@@ -384,7 +422,8 @@ def permute_dims(
     }
 
     >>> x = ivy.Container(a=ivy.array([[0., 1., 2.]]), b = ivy.array([[3., 4., 5.]]))
-    >>> y = ivy.permute_dims(x, axes=(1, 0), out=x)
+    >>> y = ivy.Container(a=ivy.zeros((3, 1)), b= ivy.zeros((3, 1)))
+    >>> ivy.permute_dims(x, axes=(1, 0), out=y)
     >>> print(y)
     {
         a: ivy.array([[0.],
@@ -394,18 +433,19 @@ def permute_dims(
                       [4.],
                       [5.]])
     }
-
     """
     return current_backend(x).permute_dims(x, axes, copy=copy, out=out)
 
 
-@handle_view
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_view
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def reshape(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -416,7 +456,8 @@ def reshape(
     allowzero: bool = True,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Gives a new shape to an array without changing its data.
+    """
+    Give a new shape to an array without changing its data.
 
     Parameters
     ----------
@@ -436,14 +477,20 @@ def reshape(
     order
         Read the elements of x using this index order, and place the elements into
         the reshaped array using this index order.
-        ‘C’ means to read / write the elements using C-like index order,
+        ``C`` means to read / write the elements using C-like index order,
         with the last axis index changing fastest, back to the first axis index
         changing slowest.
-        ‘F’ means to read / write the elements using Fortran-like index order, with
+        ``F`` means to read / write the elements using Fortran-like index order, with
         the first index changing fastest, and the last index changing slowest.
-        Note that the ‘C’ and ‘F’ options take no account of the memory layout
+        Note that the ``C`` and ``F`` options take no account of the memory layout
         of the underlying array, and only refer to the order of indexing.
-        Default order is 'C'
+        Default order is ``C``
+    allowzero
+        When ``allowzero=True``, any value in the ``shape`` argument that is equal to
+        zero, the zero value is honored. When ``allowzero=False``, any value in the
+        ``shape`` argument that is equal to zero the corresponding dimension value is
+        copied from the input tensor dynamically.
+        Default value is ``True``.
     out
         optional output array, for writing the result to. It must have a shape that the
         inputs broadcast to.
@@ -456,7 +503,8 @@ def reshape(
 
     This function conforms to the `Array API Standard
     <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.reshape.html>`_ # noqa
+    `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.reshape.html>`_
     in the standard.
 
     Both the description and the type hints above assumes an array input for simplicity,
@@ -511,7 +559,6 @@ def reshape(
         a: ivy.array([[0.],[1.],[2.]]),
         b: ivy.array([[3.],[4.],[5.]])
     }
-
     """
     ivy.utils.assertions.check_elem_in_list(order, ["C", "F"])
     return current_backend(x).reshape(
@@ -519,12 +566,14 @@ def reshape(
     )
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def roll(
     x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
     /,
@@ -533,9 +582,10 @@ def roll(
     axis: Optional[Union[int, Sequence[int]]] = None,
     out: Optional[ivy.Array] = None,
 ) -> Union[ivy.Array, ivy.Container]:
-    """Rolls array elements along a specified axis. Array elements that roll beyond the
-    last position are re-introduced at the first position. Array elements that roll
-    beyond the first position are re-introduced at the last position.
+    """
+    Roll array elements along a specified axis. Array elements that roll beyond the last
+    position are re-introduced at the first position. Array elements that roll beyond
+    the first position are re-introduced at the last position.
 
     Parameters
     ----------
@@ -567,7 +617,8 @@ def roll(
 
     This function conforms to the `Array API Standard
     <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.roll.html>`_ # noqa
+    `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.roll.html>`_
     in the standard.
 
     Both the description and the type hints above assumes an array input for simplicity,
@@ -624,27 +675,29 @@ def roll(
         a: ivy.array([2., 0., 1.]),
         b: ivy.array([4., 5., 3.])
     }
-
     """
     return current_backend(x).roll(x, shift, axis=axis, out=out)
 
 
-@handle_view
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_view
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def squeeze(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
-    axis: Union[int, Sequence[int]],
     *,
+    axis: Optional[Union[int, Sequence[int]]] = None,
     copy: Optional[bool] = None,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Removes singleton dimensions (axes) from x.
+    """
+    Remove singleton dimensions (axes) from x.
 
     Parameters
     ----------
@@ -653,6 +706,13 @@ def squeeze(
     axis
         axis (or axes) to squeeze. If a specified axis has a size greater than one, a
         ValueError is. If None, then all squeezable axes are squeezed. Default: ``None``
+    copy
+        boolean indicating whether to copy the input array.
+        If True, the function must always copy.
+        If False, the function must never copy and must
+        raise a ValueError in case a copy would be necessary.
+        If None, the function must reuse existing memory buffer if possible
+        and copy otherwise. Default: ``None``.
     out
         optional output array, for writing the result to. It must have a shape that the
         inputs broadcast to.
@@ -665,7 +725,8 @@ def squeeze(
 
     This function conforms to the `Array API Standard
     <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.squeeze.html>`_ # noqa
+    `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.squeeze.html>`_
     in the standard.
 
     Both the description and the type hints above assumes an array input for simplicity,
@@ -711,14 +772,16 @@ def squeeze(
         b: ivy.array([3., 4., 5.])
     }
     """
-    return current_backend(x).squeeze(x, axis, copy=copy, out=out)
+    return current_backend(x).squeeze(x, axis=axis, copy=copy, out=out)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def stack(
     arrays: Union[
         Tuple[Union[ivy.Array, ivy.NativeArray], ...],
@@ -729,7 +792,8 @@ def stack(
     axis: int = 0,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Joins a sequence of arrays along a new axis.
+    """
+    Join a sequence of arrays along a new axis.
 
     Parameters
     ----------
@@ -764,7 +828,8 @@ def stack(
 
     This function conforms to the `Array API Standard
     <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.stack.html>`_ # noqa
+    `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.stack.html>`_
     in the standard.
 
     Both the description and the type hints above assumes an array input for simplicity,
@@ -800,11 +865,13 @@ def stack(
 # ------#
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def clip(
     x: Union[ivy.Array, ivy.NativeArray],
     x_min: Union[Number, ivy.Array, ivy.NativeArray],
@@ -813,7 +880,8 @@ def clip(
     *,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Clips (limits) the values in an array.
+    """
+    Clips (limits) the values in an array.
 
     Given an interval, values outside the interval are clipped to the interval edges
     (element-wise). For example, if an interval of [0, 1] is specified, values smaller
@@ -920,17 +988,18 @@ def clip(
         a: ivy.array([3., 1., 2.]),
         b: ivy.array([3., 4., 3.])
     }
-
     """
     return current_backend(x).clip(x, x_min, x_max, out=out)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def constant_pad(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -939,7 +1008,8 @@ def constant_pad(
     value: Number = 0,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Pads an array with a constant value.
+    """
+    Pad an array with a constant value.
 
     Parameters
     ----------
@@ -975,10 +1045,15 @@ def constant_pad(
     ivy.array([0, 0, 1, 2, 3, 4, 5, 0, 0, 0])
 
     >>> x = ivy.array([[1, 2], [3, 4]])
-    >>> y = ivy.constant_pad(x, pad_width = [[2, 3]])
+    >>> y = ivy.constant_pad(x, pad_width=[(2, 3), (2, 3)])
     >>> print(y)
-    ivy.array([[0, 0, 1, 2, 0, 0, 0],
-                [0, 0, 3, 4, 0, 0, 0]])
+    ivy.array([[0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 2, 0, 0, 0],
+            [0, 0, 3, 4, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0]])
 
     >>> x = ivy.array([[1, 2], [3, 4]])
     >>> y = ivy.constant_pad(x, pad_width = [[3, 2], [2, 3]])
@@ -991,11 +1066,14 @@ def constant_pad(
                 [0, 0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0, 0]])
 
-    >>> x = ivy.array([[2], [3]])
-    >>> y = ivy.zeros((2, 3))
-    >>> ivy.constant_pad(x, pad_width = [[1, 1]], value = 5.0, out = y)
-    ivy.array([[5, 2, 5],
-       [5, 3, 5]])
+    >>> x = ivy.array([[2.], [3.]])
+    >>> y = ivy.zeros((4, 3))
+    >>> ivy.constant_pad(x, pad_width = [(1, 1), (1, 1)], value = 5.0, out= y)
+    >>> print(y)
+    ivy.array([[5., 5., 5.],
+           [5., 2., 5.],
+           [5., 3., 5.],
+           [5., 5., 5.]])
 
     With :class:`ivy.Container` input:
 
@@ -1004,20 +1082,21 @@ def constant_pad(
     >>> y = ivy.constant_pad(x, pad_width = [[2, 3]], value = 5.0)
     >>> print(y)
     {
-            a: ivy.array([5, 5, 1, 2, 3, 5, 5, 5]),
-            b: ivy.array([5, 5, 4, 5, 6, 5, 5, 5])
+        a: ivy.array([5., 5., 1., 2., 3., 5., 5., 5.]),
+        b: ivy.array([5., 5., 3., 4., 5., 5., 5., 5.])
     }
-
     """
-    return current_backend(x).constant_pad(x, pad_width, value, out=out)
+    return current_backend(x).constant_pad(x, pad_width=pad_width, value=value, out=out)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def repeat(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -1026,7 +1105,8 @@ def repeat(
     axis: int = None,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Repeat values along a given dimension.
+    """
+    Repeat values along a given dimension.
 
     Parameters
     ----------
@@ -1082,31 +1162,43 @@ def repeat(
     return current_backend(x).repeat(x, repeats, axis=axis, out=out)
 
 
+@handle_exceptions
+@handle_backend_invalid
+@handle_nestable
+@handle_array_like_without_promotion
 @handle_view
 @to_native_arrays_and_back
-@handle_nestable
-@handle_exceptions
-@handle_array_like_without_promotion
 @handle_array_function
+@handle_device_shifting
 def split(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
     *,
     copy: Optional[bool] = None,
-    num_or_size_splits: Optional[Union[int, Sequence[int]]] = None,
+    num_or_size_splits: Optional[
+        Union[int, Sequence[int], ivy.Array, ivy.NativeArray]
+    ] = None,
     axis: int = 0,
     with_remainder: bool = False,
 ) -> List[ivy.Array]:
-    """Splits an array into multiple sub-arrays.
+    """
+    Split an array into multiple sub-arrays.
 
     Parameters
     ----------
     x
         array to be divided into sub-arrays.
+    copy
+        boolean indicating whether to copy the input array.
+        If True, the function must always copy.
+        If False, the function must never copy and must
+        raise a ValueError in case a copy would be necessary.
+        If None, the function must reuse existing memory buffer if possible
+        and copy otherwise. Default: ``None``.
     num_or_size_splits
         Number of equal arrays to divide the array into along the given axis if an
-        integer. The size of each split element if a sequence of integers. Default is to
-        divide into as many 1-dimensional arrays as the axis dimension.
+        integer. The size of each split element if a sequence of integers or 1-D array.
+        Default is to divide into as many 1-dimensional arrays as the axis dimension.
     axis
         The axis along which to split, default is ``0``.
     with_remainder
@@ -1159,13 +1251,15 @@ def split(
     )
 
 
-@handle_view
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_view
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def swapaxes(
     x: Union[ivy.Array, ivy.NativeArray],
     axis0: int,
@@ -1175,7 +1269,8 @@ def swapaxes(
     copy: Optional[bool] = None,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Interchange two axes of an array.
+    """
+    Interchange two axes of an array.
 
     Parameters
     ----------
@@ -1185,6 +1280,13 @@ def swapaxes(
         First axis to be swapped.
     axis1
         Second axis to be swapped.
+    copy
+        boolean indicating whether to copy the input array.
+        If True, the function must always copy.
+        If False, the function must never copy and must
+        raise a ValueError in case a copy would be necessary.
+        If None, the function must reuse existing memory buffer if possible
+        and copy otherwise. Default: ``None``.
     out
         optional output array, for writing the result to. It must have a shape that the
         inputs broadcast to.
@@ -1256,19 +1358,20 @@ def swapaxes(
                       [5.]])
     }
 
-    Both the description and the type hints above assumes an array input for simplicity,
+    # Both the description and the type hints above assumes an array input for simplicity,
     but this function is *nestable*, and therefore also accepts :class:`ivy.Container`
     instances in place of any of the arguments.
-
     """
     return current_backend(x).swapaxes(x, axis0, axis1, copy=copy, out=out)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def tile(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -1276,7 +1379,8 @@ def tile(
     *,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Constructs an array by repeating x the number of times given by reps.
+    """
+    Construct an array by repeating x the number of times given by reps.
 
     Parameters
     ----------
@@ -1335,34 +1439,43 @@ def tile(
     }
 
 
-    Both the description and the type hints above assumes an array input for simplicity,
+    # Both the description and the type hints above assumes an array input for simplicity,
     but this function is *nestable*, and therefore also accepts :class:`ivy.Container`
     instances in place of any of the arguments.
-
     """
     return current_backend(x).tile(x, repeats, out=out)
 
 
+@handle_exceptions
+@handle_backend_invalid
+@handle_nestable
+@handle_array_like_without_promotion
 @handle_view
 @to_native_arrays_and_back
-@handle_nestable
-@handle_exceptions
-@handle_array_like_without_promotion
 @handle_array_function
+@handle_device_shifting
 def unstack(
-    x: Union[ivy.Array, ivy.NativeArray], 
-    /, 
-    *, 
+    x: Union[ivy.Array, ivy.NativeArray],
+    /,
+    *,
     copy: Optional[bool] = None,
-    axis: int = 0, 
-    keepdims: bool = False
+    axis: int = 0,
+    keepdims: bool = False,
 ) -> List[ivy.Array]:
-    """Unpacks the given dimension of a rank-R array into rank-(R-1) arrays.
+    """
+    Unpacks the given dimension of a rank-R array into rank-(R-1) arrays.
 
     Parameters
     ----------
     x
         Input array to unstack.
+    copy
+        boolean indicating whether to copy the input array.
+        If True, the function must always copy.
+        If False, the function must never copy and must
+        raise a ValueError in case a copy would be necessary.
+        If None, the function must reuse existing memory buffer if possible
+        and copy otherwise. Default: ``None``.
     axis
         Axis for which to unpack the array.
     keepdims
@@ -1427,17 +1540,18 @@ def unstack(
     Both the description and the type hints above assumes an array input for simplicity,
     but this function is *nestable*, and therefore also accepts :class:`ivy.Container`
     instances in place of any of the arguments.
-
     """
     return current_backend(x).unstack(x, copy=copy, axis=axis, keepdims=keepdims)
 
 
-@to_native_arrays_and_back
-@handle_out_argument
-@handle_nestable
 @handle_exceptions
+@handle_backend_invalid
+@handle_nestable
 @handle_array_like_without_promotion
+@handle_out_argument
+@to_native_arrays_and_back
 @handle_array_function
+@handle_device_shifting
 def zero_pad(
     x: Union[ivy.Array, ivy.NativeArray],
     /,
@@ -1445,7 +1559,8 @@ def zero_pad(
     *,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """Pads an array with zeros.
+    """
+    Pad an array with zeros.
 
     Parameters
     ----------
@@ -1465,7 +1580,8 @@ def zero_pad(
 
     This function conforms to the `Array API Standard
     <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/API_specification/generated/signatures.manipulation_functions.concat.html>`_ # noqa
+    `docstring <https://data-apis.org/array-api/latest/
+    API_specification/generated/array_api.concat.html>`_
     in the standard.
 
     Both the description and the type hints above assumes an array input for simplicity,
@@ -1482,7 +1598,7 @@ def zero_pad(
     ivy.array([0., 0., 1., 2., 3., 4., 5., 6., 0., 0., 0.])
 
     >>> x = ivy.array([[1., 2., 3.],[4, 5, 6]])
-    >>> y = ivy.zero_pad(x, pad_width = [[2, 3]])
+    >>> y = ivy.zero_pad(x, pad_width = [[2, 3], [2, 3]])
     >>> print(y)
     ivy.array([[0., 0., 0., 0., 0., 0., 0., 0.],
        [0., 0., 0., 0., 0., 0., 0., 0.],
@@ -1499,6 +1615,5 @@ def zero_pad(
         a: ivy.array([0., 0., 1., 2., 3., 0., 0., 0.]),
         b: ivy.array([0., 0., 3., 4., 5., 0., 0., 0.])
     }
-
     """
     return current_backend(x).zero_pad(x, pad_width, out=out)

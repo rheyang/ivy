@@ -12,13 +12,12 @@ class _ContainerWithActivationExperimental(ContainerBase):
         x: Union[float, int, ivy.Container],
         /,
         *,
-        eps: Optional[float] = None,
+        eps: Optional[Union[float, ivy.Container]] = None,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.logit.
-        This method simply wraps the function, and so the
-        docstring for ivy.logit  also applies to this method with
+        ivy.Container static method variant of ivy.logit. This method simply wraps the
+        function, and so the docstring for ivy.logit  also applies to this method with
         minimal changes.
 
         Parameters
@@ -70,13 +69,12 @@ class _ContainerWithActivationExperimental(ContainerBase):
         self: Union[float, int, ivy.Container],
         /,
         *,
-        eps: Optional[float] = None,
+        eps: Optional[Union[float, ivy.Container]] = None,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.logit.
-        This method simply wraps the function, and so the
-        docstring for ivy.logit  also applies to this method with
+        ivy.Container instance method variant of ivy.logit. This method simply wraps the
+        function, and so the docstring for ivy.logit  also applies to this method with
         minimal changes.
 
         Parameters
@@ -116,7 +114,6 @@ class _ContainerWithActivationExperimental(ContainerBase):
             a: ivy.array([-0.84729779, 1.38629448, 1.38629448]),
             b: ivy.array([-1.38629436, 1.38629448, -1.38629436])
         }
-
         """
         return self.static_logit(self, eps=eps, out=out)
 
@@ -125,17 +122,17 @@ class _ContainerWithActivationExperimental(ContainerBase):
         x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        threshold: Union[int, float] = 0,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        threshold: Union[int, float, ivy.Container] = 0,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.thresholded_relu.
-        This method simply wraps the function, and so the docstring
-        for ivy.thresholded_relu also applies to this method with minimal changes.
+        ivy.Container static method variant of ivy.thresholded_relu. This method simply
+        wraps the function, and so the docstring for ivy.thresholded_relu also applies
+        to this method with minimal changes.
 
         Parameters
         ----------
@@ -173,7 +170,6 @@ class _ContainerWithActivationExperimental(ContainerBase):
             a: ivy.array([1., 0.]),
             b: ivy.array([0., 0.])
         }
-
         """
         return ContainerBase.cont_multi_map_in_function(
             "thresholded_relu",
@@ -190,17 +186,17 @@ class _ContainerWithActivationExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        threshold: Union[int, float] = 0,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        threshold: Union[int, float, ivy.Container] = 0,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.thresholded_relu.
-        This method simply wraps the function, and so the docstring
-        for ivy.thresholded_relu also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.thresholded_relu. This method
+        simply wraps the function, and so the docstring for ivy.thresholded_relu also
+        applies to this method with minimal changes.
 
         Parameters
         ----------
@@ -238,7 +234,6 @@ class _ContainerWithActivationExperimental(ContainerBase):
             a: ivy.array([1., 0.]),
             b: ivy.array([0., 0.])
         }
-
         """
         return self.static_thresholded_relu(
             self,
@@ -256,10 +251,10 @@ class _ContainerWithActivationExperimental(ContainerBase):
         slope: Union[float, ivy.NativeArray, ivy.Array, ivy.Container],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
@@ -289,10 +284,10 @@ class _ContainerWithActivationExperimental(ContainerBase):
         self: ivy.Container,
         slope: Union[float, ivy.NativeArray, ivy.Array, ivy.Container],
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
@@ -321,16 +316,16 @@ class _ContainerWithActivationExperimental(ContainerBase):
         x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.relu6.
-        This method simply wraps the function, and so the docstring
-        for ivy.relu6 also applies to this method with minimal changes.
+        ivy.Container static method variant of ivy.relu6. This method simply wraps the
+        function, and so the docstring for ivy.relu6 also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -359,17 +354,14 @@ class _ContainerWithActivationExperimental(ContainerBase):
 
         Examples
         --------
-        >>> x = {
-                    a: ivy.array([-3., -2., -1., 0., 1., 2., 3., 4., 5.]),
-                    b: ivy.array([1., 2., 3., 4., 5., 6., 7., 8., 9.])
-                }
+        >>> x = ivy.Container(a = ivy.array([-3., -2., -1., 0., 1., 2., 3., 4., 5.]),
+        ...                   b = ivy.array([1., 2., 3., 4., 5., 6., 7., 8., 9.]))
         >>> y = ivy.Container.static_relu6(x)
         >>> print(y)
         {
             a: ivy.array([0., 0., 0., 0., 1., 2., 3., 4., 5.]),
             b: ivy.array([1., 2., 3., 4., 5., 6., 6., 6., 6.])
         }
-
         """
         return ContainerBase.cont_multi_map_in_function(
             "relu6",
@@ -385,16 +377,16 @@ class _ContainerWithActivationExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
         out: Optional[ivy.Container] = None,
     ) -> ivy.Container:
         """
-        ivy.Container instance method variant of ivy.relu6.
-        This method simply wraps the function, and so the docstring
-        for ivy.relu6 also applies to this method with minimal changes.
+        ivy.Container instance method variant of ivy.relu6. This method simply wraps the
+        function, and so the docstring for ivy.relu6 also applies to this method with
+        minimal changes.
 
         Parameters
         ----------
@@ -423,17 +415,14 @@ class _ContainerWithActivationExperimental(ContainerBase):
 
         Examples
         --------
-        >>> x = {
-                    a: ivy.array([-3., -2., -1., 0., 1., 2., 3., 4., 5.]),
-                    b: ivy.array([1., 2., 3., 4., 5., 6., 7., 8., 9.])
-                }
+        >>> x = ivy.Container(a = ivy.array([-3., -2., -1., 0., 1., 2., 3., 4., 5.]),
+        ...                   b= ivy.array([1., 2., 3., 4., 5., 6., 7., 8., 9.]))
         >>> y = x.relu()
         >>> print(y)
         {
             a: ivy.array([0., 0., 0., 0., 1., 2., 3., 4., 5.]),
-            b: ivy.array([1., 2., 3., 4., 5., 6., 6., 6., 6.])
+            b: ivy.array([1., 2., 3., 4., 5., 6., 7., 8., 9.])
         }
-
         """
         return self.static_relu6(
             self,
@@ -445,158 +434,19 @@ class _ContainerWithActivationExperimental(ContainerBase):
         )
 
     @staticmethod
-    def static_batch_norm(
-        x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
-        mean: Union[ivy.NativeArray, ivy.Array, ivy.Container],
-        variance: Union[ivy.NativeArray, ivy.Array, ivy.Container],
-        /,
-        *,
-        offset: Optional[Union[ivy.NativeArray, ivy.Array, ivy.Container]] = None,
-        scale: Optional[Union[ivy.NativeArray, ivy.Array, ivy.Container]] = None,
-        training: bool = False,
-        eps: float = 1e-5,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
-    ) -> ivy.Container:
-        """
-        ivy.Container static method variant of ivy.batch_norm.
-        This method simply wraps the function, and so the docstring
-        for ivy.batch_norm also applies to this method with minimal changes.
-
-        Parameters
-        ----------
-        x
-            Input container.
-        mean
-            A mean array for the input's normalization.
-        variance
-            A variance array for the input's normalization.
-        offset
-            An offset array. If present, will be added to the normalized input.
-        scale
-            A scale array. If present, the scale is applied to the normalized input.
-        training
-            If true, calculate and use the mean and variance of `x`. Otherwise, use the
-            provided `mean` and `variance`.
-        eps
-            A small float number to avoid dividing by 0.
-        key_chains
-            The key-chains to apply or not apply the method to. Default is ``None``.
-        to_apply
-            If True, the method will be applied to key_chains, otherwise key_chains
-            will be skipped. Default is ``True``.
-        prune_unapplied
-            Whether to prune key_chains for which the function was not applied.
-            Default is ``False``.
-        map_sequences
-            Whether to also map method to sequences (lists, tuples).
-            Default is ``False``.
-
-        Returns
-        -------
-        ret
-             Container containing the normalized, scaled, offset values.
-        """
-        return ContainerBase.cont_multi_map_in_function(
-            "batch_norm",
-            x,
-            mean,
-            variance,
-            scale=scale,
-            offset=offset,
-            training=training,
-            eps=eps,
-            key_chains=key_chains,
-            to_apply=to_apply,
-            prune_unapplied=prune_unapplied,
-            map_sequences=map_sequences,
-        )
-
-    def batch_norm(
-        self: Union[ivy.Array, ivy.NativeArray, ivy.Container],
-        mean: Union[ivy.NativeArray, ivy.Array, ivy.Container],
-        variance: Union[ivy.NativeArray, ivy.Array, ivy.Container],
-        /,
-        *,
-        offset: Optional[Union[ivy.NativeArray, ivy.Array, ivy.Container]] = None,
-        scale: Optional[Union[ivy.NativeArray, ivy.Array, ivy.Container]] = None,
-        training: bool = False,
-        eps: float = 1e-5,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
-    ) -> ivy.Container:
-        """
-        ivy.Container static method variant of ivy.batch_norm.
-        This method simply wraps the function, and so the docstring
-        for ivy.batch_norm also applies to this method with minimal changes.
-
-        Parameters
-        ----------
-        self
-            Input container.
-        mean
-            A mean array for the input's normalization.
-        variance
-            A variance array for the input's normalization.
-        offset
-            An offset array. If present, will be added to the normalized input.
-        scale
-            A scale array. If present, the scale is applied to the normalized input.
-        training
-            If true, calculate and use the mean and variance of `x`. Otherwise, use the
-            provided `mean` and `variance`.
-        eps
-            A small float number to avoid dividing by 0.
-        key_chains
-            The key-chains to apply or not apply the method to. Default is ``None``.
-        to_apply
-            If True, the method will be applied to key_chains, otherwise key_chains
-            will be skipped. Default is ``True``.
-        prune_unapplied
-            Whether to prune key_chains for which the function was not applied.
-            Default is ``False``.
-        map_sequences
-            Whether to also map method to sequences (lists, tuples).
-            Default is ``False``.
-
-        Returns
-        -------
-        ret
-             Container containing the normalized, scaled, offset values.
-        """
-        return self.static_batch_norm(
-            self,
-            mean,
-            variance,
-            scale=scale,
-            offset=offset,
-            training=training,
-            eps=eps,
-            key_chains=key_chains,
-            to_apply=to_apply,
-            prune_unapplied=prune_unapplied,
-            map_sequences=map_sequences,
-        )
-
-    @staticmethod
     def static_logsigmoid(
         input: Union[ivy.Array, ivy.NativeArray, ivy.Container],
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
     ) -> ivy.Container:
         """
-        ivy.Container static method variant of ivy.logsigmoid.
-        This method simply wraps the function, and so the
-        docstring for ivy.logsigmoid also applies to this method with
-        minimal changes.
+        ivy.Container static method variant of ivy.logsigmoid. This method simply wraps
+        the function, and so the docstring for ivy.logsigmoid also applies to this
+        method with minimal changes.
 
         Parameters
         ----------
@@ -653,13 +503,13 @@ class _ContainerWithActivationExperimental(ContainerBase):
         self: ivy.Container,
         /,
         *,
-        key_chains: Optional[Union[List[str], Dict[str, str]]] = None,
-        to_apply: bool = True,
-        prune_unapplied: bool = False,
-        map_sequences: bool = False,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
     ) -> ivy.Container:
         """
-        Applies element-wise Log-sigmoid of x i.e. log(1 / (1 + exp(-x)).
+        Apply element-wise Log-sigmoid of x i.e. log(1 / (1 + exp(-x)).
 
         Parameters
         ----------
@@ -668,7 +518,18 @@ class _ContainerWithActivationExperimental(ContainerBase):
 
         Returns
         -------
+        ret
             Container with Log-sigmoid applied to the leaves.
+
+        Examples
+        --------
+        >>> x = ivy.Container(a=ivy.array([1.0, -1.2]), b=ivy.array([0.4, -0.2]))
+        >>> y = x.logsigmoid()
+        >>> print(y)
+        {
+            a: ivy.array([-0.31326163, -1.46328258]),
+            b: ivy.array([-0.51301527, -0.79813886])
+        }
         """
         return self.static_logsigmoid(
             self,
@@ -676,4 +537,370 @@ class _ContainerWithActivationExperimental(ContainerBase):
             to_apply=to_apply,
             prune_unapplied=prune_unapplied,
             map_sequences=map_sequences,
+        )
+
+    @staticmethod
+    def static_selu(
+        x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
+        /,
+        *,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        out: Optional[ivy.Container] = None,
+    ) -> ivy.Container:
+        """
+        ivy.Container static method variant of ivy.selu. This method simply wraps the
+        function, and so the docstring for ivy.selu also applies to this method with
+        minimal changes.
+
+        Parameters
+        ----------
+        x
+            input container.
+        key_chains
+            The key-chains to apply or not apply the method to. Default is ``None``.
+        to_apply
+            If True, the method will be applied to key_chains, otherwise key_chains
+            will be skipped. Default is ``True``.
+        prune_unapplied
+            Whether to prune key_chains for which the function was not applied.
+            Default is ``False``.
+        map_sequences
+            Whether to also map method to sequences (lists, tuples).
+            Default is ``False``.
+        out
+            optional output container, for writing the result to. It must have a shape
+            that the inputs broadcast to.
+
+        Returns
+        -------
+        ret
+            a container with the scaled exponential linear unit activation function
+            applied element-wise.
+
+        Examples
+        --------
+        >>> x = ivy.Container(a=ivy.array([1.0, -1.2]), b=ivy.array([0.4, -0.2]))
+        >>> y = ivy.Container.static_selu(x)
+        >>> print(y)
+        {
+            a: ivy.array([1.05070102, -1.22856998]),
+            b: ivy.array([0.42028043, -0.31868932])
+        }
+        """
+        return ContainerBase.cont_multi_map_in_function(
+            "selu",
+            x,
+            key_chains=key_chains,
+            to_apply=to_apply,
+            prune_unapplied=prune_unapplied,
+            map_sequences=map_sequences,
+            out=out,
+        )
+
+    def selu(
+        self: ivy.Container,
+        /,
+        *,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        out: Optional[ivy.Container] = None,
+    ) -> ivy.Container:
+        """
+        ivy.Container instance method variant of ivy.selu. This method simply wraps the
+        function, and so the docstring for ivy.selu also applies to this method with
+        minimal changes.
+
+        Parameters
+        ----------
+        self
+            input container.
+        key_chains
+            The key-chains to apply or not apply the method to. Default is ``None``.
+        to_apply
+            If True, the method will be applied to key_chains, otherwise key_chains
+            will be skipped. Default is ``True``.
+        prune_unapplied
+            Whether to prune key_chains for which the function was not applied.
+            Default is ``False``.
+        map_sequences
+            Whether to also map method to sequences (lists, tuples).
+            Default is ``False``.
+        out
+            optional output container, for writing the result to. It must have a shape
+            that the inputs broadcast to.
+
+        Returns
+        -------
+        ret
+            a container with the scaled exponential linear unit activation function
+            applied element-wise.
+
+        Examples
+        --------
+        >>> x = ivy.Container(a=ivy.array([1.0, -1.2]), b=ivy.array([0.4, -0.2]))
+        >>> y = x.selu()
+        >>> print(y)
+        {
+            a: ivy.array([1.05070102, -1.22856998]),
+            b: ivy.array([0.42028043, -0.31868932])
+        }
+        """
+        return self.static_selu(
+            self,
+            key_chains=key_chains,
+            to_apply=to_apply,
+            prune_unapplied=prune_unapplied,
+            map_sequences=map_sequences,
+            out=out,
+        )
+
+    @staticmethod
+    def _static_silu(
+        x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
+        /,
+        *,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        out: Optional[ivy.Container] = None,
+    ) -> ivy.Container:
+        """
+        ivy.Container static method variant of ivy.silu. This method simply wraps the
+        function, and so the docstring for ivy.silu also applies to this method with
+        minimal changes.
+
+        Parameters
+        ----------
+        x
+            input container.
+        key_chains
+            The key-chains to apply or not apply the method to. Default is ``None``.
+        to_apply
+            If True, the method will be applied to key_chains, otherwise key_chains
+            will be skipped. Default is ``True``.
+        prune_unapplied
+            Whether to prune key_chains for which the function was not applied.
+            Default is ``False``.
+        map_sequences
+            Whether to also map method to sequences (lists, tuples).
+            Default is ``False``.
+        out
+            optional output container, for writing the result to. It must have a shape
+            that the inputs broadcast to.
+
+        Returns
+        -------
+        ret
+            a container with the rectified linear activation unit function
+            applied element-wise.
+
+        Examples
+        --------
+        >>> x = ivy.Container(a=ivy.array([1.0, -1.2]), b=ivy.array([0.4, -0.2]))
+        >>> y = ivy.Container.static_silu(x)
+        >>> print(y)
+        {
+            a: ivy.array([0.73105854, -0.27777028]),
+            b: ivy.array([0.23947507, -0.0900332])
+        }
+        """
+        return ContainerBase.cont_multi_map_in_function(
+            "silu",
+            x,
+            key_chains=key_chains,
+            to_apply=to_apply,
+            prune_unapplied=prune_unapplied,
+            map_sequences=map_sequences,
+            out=out,
+        )
+
+    def silu(
+        self: ivy.Container,
+        /,
+        *,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        out: Optional[ivy.Container] = None,
+    ) -> ivy.Container:
+        """
+        ivy.Container instance method variant of ivy.silu. This method simply wraps the
+        function, and so the docstring for ivy.silu also applies to this method with
+        minimal changes.
+
+        Parameters
+        ----------
+        self
+            input container.
+        key_chains
+            The key-chains to apply or not apply the method to. Default is ``None``.
+        to_apply
+            If True, the method will be applied to key_chains, otherwise key_chains
+            will be skipped. Default is ``True``.
+        prune_unapplied
+            Whether to prune key_chains for which the function was not applied.
+            Default is ``False``.
+        map_sequences
+            Whether to also map method to sequences (lists, tuples).
+            Default is ``False``.
+        out
+            optional output container, for writing the result to. It must have a shape
+            that the inputs broadcast to.
+
+        Returns
+        -------
+        ret
+            a container with the rectified linear activation unit function
+            applied element-wise.
+
+        Examples
+        --------
+        >>> x = ivy.Container(a=ivy.array([1.0, -1.2]), b=ivy.array([0.4, -0.2]))
+        >>> y = x.silu()
+        >>> print(y)
+        {
+            a: ivy.array([0.73105854, -0.27777028]),
+            b: ivy.array([0.23947507, -0.0900332])
+        }
+        """
+        return self._static_silu(
+            self,
+            key_chains=key_chains,
+            to_apply=to_apply,
+            prune_unapplied=prune_unapplied,
+            map_sequences=map_sequences,
+            out=out,
+        )
+
+    @staticmethod
+    def _static_elu(
+        x: Union[ivy.Array, ivy.NativeArray, ivy.Container],
+        /,
+        *,
+        alpha: ivy.Container = 1.0,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        out: Optional[ivy.Container] = None,
+    ) -> ivy.Container:
+        """
+        ivy.Container static method variant of ivy.elu. This method simply wraps the
+        function, and so the docstring for ivy.elu also applies to this method with
+        minimal changes.
+
+        Parameters
+        ----------
+        x
+            input container.
+        alpha
+            scaler for controlling the slope of the function for x <= 0 Default: 1.0
+        key_chains
+            The key-chains to apply or not apply the method to. Default is ``None``.
+        to_apply
+            If True, the method will be applied to key_chains, otherwise key_chains
+            will be skipped. Default is ``True``.
+        prune_unapplied
+            Whether to prune key_chains for which the function was not applied.
+            Default is ``False``.
+        map_sequences
+            Whether to also map method to sequences (lists, tuples).
+            Default is ``False``.
+        out
+            optional output container, for writing the result to. It must have a shape
+            that the inputs broadcast to.
+
+        Returns
+        -------
+        ret
+             a container with the elu unit function applied element-wise.
+
+        Examples
+        --------
+        >>> x = x = ivy.Container(a=ivy.array([0.39, -0.85]), b=ivy.array([1., -0.2]))
+        >>> y = ivy.Container.static_elu(x)
+        >>> print(y)
+        {
+            a: ivy.array([0.38999999, -0.57]),
+            b: ivy.array([1., -0.18])
+        }
+        """
+        return ContainerBase.cont_multi_map_in_function(
+            "elu",
+            x,
+            alpha=alpha,
+            key_chains=key_chains,
+            to_apply=to_apply,
+            prune_unapplied=prune_unapplied,
+            map_sequences=map_sequences,
+            out=out,
+        )
+
+    def elu(
+        self: ivy.Container,
+        /,
+        *,
+        alpha: ivy.Container = 1.0,
+        key_chains: Optional[Union[List[str], Dict[str, str], ivy.Container]] = None,
+        to_apply: Union[bool, ivy.Container] = True,
+        prune_unapplied: Union[bool, ivy.Container] = False,
+        map_sequences: Union[bool, ivy.Container] = False,
+        out: Optional[ivy.Container] = None,
+    ) -> ivy.Container:
+        """
+        ivy.Container instance method variant of ivy.elu. This method simply wraps the
+        function, and so the docstring for ivy.elu also applies to this method with
+        minimal changes.
+
+        Parameters
+        ----------
+        self
+            input container.
+        alpha
+            scaler for controlling the slope of the function for x <= 0 Default: 1.0
+        key_chains
+            The key-chains to apply or not apply the method to. Default is ``None``.
+        to_apply
+            If True, the method will be applied to key_chains, otherwise key_chains
+            will be skipped. Default is ``True``.
+        prune_unapplied
+            Whether to prune key_chains for which the function was not applied.
+            Default is ``False``.
+        map_sequences
+            Whether to also map method to sequences (lists, tuples).
+            Default is ``False``.
+        out
+            optional output container, for writing the result to. It must have a shape
+            that the inputs broadcast to.
+
+        Returns
+        -------
+        ret
+           a container with the elu unit function applied element-wise.
+
+        Examples
+        --------
+        >>> x = ivy.Container(a=ivy.array([0.39, -0.85]), b=ivy.array([1., -0.2]))
+        >>> y = x.elu()
+        >>> print(y)
+        {
+            a: ivy.array([0.38999999, -0.57]),
+            b: ivy.array([1., -0.18])
+        }
+        """
+        return self._static_elu(
+            self,
+            alpha=alpha,
+            key_chains=key_chains,
+            to_apply=to_apply,
+            prune_unapplied=prune_unapplied,
+            map_sequences=map_sequences,
+            out=out,
         )

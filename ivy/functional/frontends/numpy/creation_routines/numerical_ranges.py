@@ -1,14 +1,14 @@
 # global
 import ivy
 from ivy.functional.frontends.numpy.func_wrapper import (
-    outputs_to_numpy_arrays,
+    outputs_to_frontend_arrays,
     to_ivy_arrays_and_back,
     handle_numpy_dtype,
 )
 
 
 @handle_numpy_dtype
-@outputs_to_numpy_arrays
+@outputs_to_frontend_arrays
 def arange(start, stop=None, step=1, dtype=None, *, like=None):
     return ivy.arange(start, stop, step, dtype=dtype)
 
@@ -41,6 +41,21 @@ def meshgrid(*xi, copy=True, sparse=False, indexing="xy"):
     if copy:
         return [ivy.copy_array(x) for x in ret]
     return ret
+
+
+@handle_numpy_dtype
+@to_ivy_arrays_and_back
+def geomspace(start, stop, num=50, endpoint=True, dtype=None, axis=0):
+    cr = ivy.log(stop / start) / (num - 1 if endpoint else num)
+    x = ivy.linspace(
+        0, cr * (num - 1 if endpoint else num), num, endpoint=endpoint, axis=axis
+    )
+    x = ivy.exp(x)
+    x = start * x
+    x[0] = start
+    if endpoint:
+        x[-1] = stop
+    return x.asarray(dtype=dtype)
 
 
 class nd_grid:
